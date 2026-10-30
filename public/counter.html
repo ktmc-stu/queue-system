@@ -64,7 +64,7 @@ onState(s => {
   }
 });
 
-$('btnNext').onclick = async () => { const t = await callNext(cid); toast(t ? 'Called 已叫 ' + t.label : 'No waiting 無人等候'); };
+$('btnNext').onclick = async () => { const t = await callNext(cid); toast(t ? 'Called 已叫 ' + t.label : 'Not found 找不到該籌號'); };
 $('btnRecall').onclick = async () => { const t = currentOf(cid); if (!t) return toast('Nothing to recall 無可重呼'); await recall(cid); toast('Recalled 已重呼 ' + t.label); };
 $('btnComplete').onclick = async () => { const t = currentOf(cid); if (!t) return toast('No active ticket 無服務中籌號'); await completeTicket(t.key); toast('Completed 已完成 ' + t.label); };
 $('btnUndo').onclick = async () => {
