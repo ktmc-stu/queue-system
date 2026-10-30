@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head>
+<!doctype html><html lang="zh-HK"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kiosk 取號</title><link rel="stylesheet" href="css/style.css">
 <style>
@@ -49,7 +49,7 @@
     <div class="k-stat"><small>Est. wait 預計等候</small><span id="statEst">—</span></div>
   </div>
   <div class="row" style="justify-content:center">
-    <button id="btnReprint" class="btn-gray">REPRINT<br><span class="hk">重印小票</span></button>
+    <button id="btnReprint" class="btn-gray">REPRINT<br><span class="hk">重印號碼票</span></button>
     <button id="btnPaper" class="btn-gray">PAPER<br><span class="hk">紙張設定</span></button>
   </div>
   <div class="k-note" id="note"></div>
@@ -66,12 +66,12 @@
     <div class="k-stat"><small>Ahead 你前面</small><span id="tvAhead">0</span> 人</div>
     <div class="k-stat"><small>Est. wait 預計等候</small><span id="tvEst">—</span></div>
   </div>
-  <div class="k-note">Please keep this ticket and watch for the display announcement. 請保留此籌號，並留意大屏幕廣播。</div>
+  <div class="k-note">Please keep this ticket and watch for the display announcement. 請保留此籌號，並留意顯示屏廣播。</div>
   <div class="k-back" id="backCount"></div>
 </div>
 
 <div class="kiosk-wrap" id="reprintView" style="display:none">
-  <div class="k-hero-title">Reprint 重印小票</div>
+  <div class="k-hero-title">Reprint 重印號碼票</div>
   <div class="card" id="rpLock" style="max-width:380px; width:100%; text-align:center">
     <p class="muted" style="margin-bottom:10px">Admin password required 需要管理員密碼</p>
     <input type="password" id="rpPw" placeholder="Password 密碼">
@@ -82,7 +82,7 @@
     <p id="rpErr" style="color:#dc2626; font-weight:600; margin-top:8px"></p>
   </div>
   <div class="card" id="rpList" style="display:none; max-width:760px; width:100%; max-height:62vh; overflow:auto; text-align:left">
-    <h3 style="border:none; padding:0; margin-bottom:10px">Choose ticket 選擇要重印嘅籌號</h3>
+    <h3 style="border:none; padding:0; margin-bottom:10px">Choose ticket 選擇要重印的籌號</h3>
     <div id="rpItems" style="display:flex; flex-wrap:wrap; gap:8px"></div>
     <div class="row" style="margin-top:14px"><button id="rpBack2" class="btn-gray">Back 返回</button></div>
   </div>
@@ -151,7 +151,7 @@ onState(s => {
   }
 });
 
-/* ===== 小票模板 ===== */
+/* ===== 號碼票模板 ===== */
 function ticketHTML(t, reprint){
   return `
     ${reprint ? '<div class="t-reprint">Reprinted 重新列印</div>' : ''}
@@ -166,21 +166,21 @@ function ticketHTML(t, reprint){
       <div class="t-title">號碼票</div>
       <div class="t-title-en">QUEUE TICKET</div>
       <div class="t-num">${t.label}</div>
-      <div class="t-row">發行時間 Issuing Time: ${t.time}</div>
+      <div class="t-row">發出時間 Issuing Time: ${t.time}</div>
       ${reprint ? `<div class="t-row">重印時間 Reprint Time: ${nowLabel()}</div>` : ''}
       <div class="t-row">時段 Session: ${STATE.session.prefix}</div>
     </div>
     <div class="t-note">
-      請妥善保管此籌號，並留意屏幕及廣播。<br>
+      請妥善保管此籌號，並留意螢幕及廣播。<br>
       Please keep this ticket and wait for your turn.<br>
-      若連續叫號3次後仍未到場，籌號將作廢。
+      若連續叫號3次後仍未到場，籌號將作廢。<br>
       Your ticket will be canceled after three missed calls.<br>
       如不慎過號，請重新取號輪候。<br>
       Please get a new ticket if you missed your turn.
     </div>`;
 }
 
-/* 按紙張設定打印 */
+/* 按紙張設定列印 */
 function setPrint(t, reprint){
   const pa = $('printArea');
   pa.className = (STATE.settings.paper === '58') ? 'p58' : '';
@@ -203,11 +203,11 @@ $('takeBtn').onclick = async () => {
   setPrint(t, false);
 
   let sec = 10;
-  $('backCount').textContent = `Tap anywhere to return 點擊任意位置返回 · ${sec}s`;
+  $('backCount').textContent = `Tap anywhere to return 點擊任何位置返回 · ${sec}s`;
   clearInterval(backTimer);
   backTimer = setInterval(() => {
     sec--;
-    $('backCount').textContent = `Tap anywhere to return 點擊任意位置返回 · ${sec}s`;
+    $('backCount').textContent = `Tap anywhere to return 點擊任何位置返回 · ${sec}s`;
     if (sec <= 0) goHome();
   }, 1000);
   busy = false;
@@ -279,7 +279,7 @@ function renderRpList(){
   ).join('') || '<p class="muted">No tickets 暫無籌號</p>';
 }
 
-/* 揀號碼 → 預覽 */
+/* 選取號碼 → 預覽 */
 $('rpItems').onclick = e => {
   const k = e.target.dataset.k; if (!k) return;
   const t = ticketsArr().find(x => x.key === k); if (!t) return;
@@ -291,7 +291,7 @@ $('rpItems').onclick = e => {
       <div class="center" style="font-size:11px">KWUN TONG MARYKNOLL COLLEGE</div>
       <div class="center" style="margin-top:6px">號碼票 QUEUE TICKET</div>
       <div class="num">${t.label}</div>
-      <div>發行時間 Issuing Time: ${t.time}</div>
+      <div>發出時間 Issuing Time: ${t.time}</div>
       <div>重印時間 Reprint Time: ${nowLabel()}</div>
       <div>時段 Session: ${STATE.session.prefix}</div>
     </div>`;
@@ -299,7 +299,7 @@ $('rpItems').onclick = e => {
   $('rpPreview').style.display = 'block';
 };
 
-/* 確定先列印 */
+/* 確認後列印 */
 $('rpPrint').onclick = () => {
   if (!rpTicket) return;
   setPrint(rpTicket, true);
