@@ -13,7 +13,7 @@
     <button id="btnRecall" class="btn-amber">RECALL<br><span class="hk">重新呼叫</span></button>
     <button id="btnComplete" class="btn-green">COMPLETE<br><span class="hk">完成</span></button>
     <button id="btnUndo" class="btn-gray">UNDO<br><span class="hk">撤回上一步</span></button>
-    <button id="btnStop" style="background:linear-gradient(135deg,#ef4444,#b91c1c); box-shadow:0 4px 14px rgba(239,68,68,.35)">STOP<br><span class="hk">停止播報</span></button>
+    <button id="btnStop" class="btn-red">STOP<br><span class="hk">停止播報</span></button>
     <button id="btnPause" class="btn-gray">PAUSE<br><span class="hk">暫停服務</span></button>
     <button id="btnCallNum" class="btn-gray">CALL NUMBER<br><span class="hk">指定號碼</span></button>
   </div>
@@ -57,11 +57,9 @@ onState(s => {
   const btnP = $('btnPause');
   if (paused) {
     btnP.innerHTML = 'RESUME<br><span class="hk">恢復服務</span>';
-    btnP.style.background = 'linear-gradient(135deg,#10b981,#047857)';
-    btnP.style.boxShadow = '0 4px 14px rgba(16,185,129,.35)';
+    btnP.className = 'btn-green';
   } else {
     btnP.innerHTML = 'PAUSE<br><span class="hk">暫停服務</span>';
-    btnP.style.background = '';
     btnP.className = 'btn-gray';
   }
 });
