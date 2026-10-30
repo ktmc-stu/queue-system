@@ -1,5 +1,11 @@
-<!-- css/style.css : Apple-style design system for KTMC Queue -->
-<style> /* (save this file as css/style.css, without the <style> tags) */
+/* =====================================================
+   KTMC Queue System — Apple-style design system
+   PURE CSS FILE: must NOT contain <style> / </style> tags.
+   The dummy rule below absorbs damage if a stray "<style>"
+   tag is accidentally saved at the top of this file.
+   ===================================================== */
+.qs-guard{--qs-guard:0}
+
 :root{
   --sf-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
   --sf-text:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Icons","Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -148,4 +154,3 @@ th{font-weight:600;color:var(--muted);background:#fafafc} tr:last-child td{borde
   #printArea .t-row{font-size:10px;margin:2px 0}
   #printArea .t-note{border-top:1px dashed #000;padding-top:6px;font-size:9px;line-height:1.55;text-align:left}
 }
-</style>
