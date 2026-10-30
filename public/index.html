@@ -1,23 +1,25 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#161617">
 <title>Queue System 排隊系統</title><link rel="stylesheet" href="css/style.css">
 </head><body>
 <div class="topbar"><span>KTMC Queue System 排隊系統</span><span class="chip">Live</span></div>
 <div class="admin-wrap">
-  <div class="card center" style="text-align:center">
-    <h3 style="border:none; padding:0; font-size:24px">Welcome 歡迎使用</h3>
+  <div class="card center welcome-card">
+    <h3>Welcome 歡迎使用</h3>
     <p class="muted">Choose a station 選擇終端</p>
   </div>
   <div class="btn-grid">
-    <a href="kiosk.html"><button style="width:100%">TAKE TICKET<br><span class="hk">取號機</span></button></a>
-    <a href="display.html"><button class="btn-green" style="width:100%">DISPLAY<br><span class="hk">大屏幕</span></button></a>
-    <button id="btnCounters" class="btn-amber" style="width:100%">COUNTER<br><span class="hk">櫃位選擇</span></button>
-    <a href="admin.html"><button class="btn-gray" style="width:100%">ADMIN<br><span class="hk">管理</span></button></a>
+    <a href="kiosk.html"><button>TAKE TICKET<br><span class="hk">取號機</span></button></a>
+    <a href="display.html"><button class="btn-green">DISPLAY<br><span class="hk">大屏幕</span></button></a>
+    <button id="btnCounters" class="btn-amber">COUNTER<br><span class="hk">櫃位選擇</span></button>
+    <a href="admin.html"><button class="btn-gray">ADMIN<br><span class="hk">管理</span></button></a>
   </div>
   <div class="card" id="counterPick" style="display:none">
     <h3>Choose Counter 選擇櫃位</h3>
     <div class="btn-grid" id="counterList"></div>
   </div>
+  <footer class="qp-footer">KTMC Queue System · 觀塘瑪利諾書院<span class="qp-pipe">|</span>Copyright © 2026 KTMC. All rights reserved.</footer>
 </div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -26,7 +28,7 @@
 onState(s => {
   const cs = (s.settings.counters || []);
   document.getElementById('counterList').innerHTML = cs.map(c =>
-    `<a href="counter.html?id=${c.id}"><button class="btn-amber" style="width:100%">${c.name}<br><span class="hk">${c.nameZh}</span></button></a>`
+    `<a href="counter.html?id=${c.id}"><button class="btn-amber">${c.name}<br><span class="hk">${c.nameZh}</span></button></a>`
   ).join('') || '<p class="muted">No counters 暫無櫃位</p>';
 });
 document.getElementById('btnCounters').onclick = () => {
