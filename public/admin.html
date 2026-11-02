@@ -91,7 +91,17 @@
     </div>
     <p class="muted" style="margin-top:6px">58mm: content shrinks & left-aligned. 58mm 會自動縮小內容並靠左排版。</p>
   </div>
-
+  <div class="card">
+  <h3>Password 系統密碼</h3>
+  <p class="muted" style="margin-top:0">更改後，所有頁面（取號機、櫃位、顯示屏、管理）都必須使用新密碼登入。密碼更改後請通知所有操作人員。<br>
+  After changing, all pages (kiosk, counter, display, admin) require the new password. Please inform all operators.</p>
+  <div class="row">
+    <input type="password" id="newPwInput" placeholder="新密碼 New password" style="flex:1">
+    <input type="password" id="newPwConfirm" placeholder="確認密碼 Confirm" style="flex:1">
+    <button id="btnChangePw" class="btn-amber">更改 Change</button>
+  </div>
+  <p class="muted" id="pwStatus" style="margin-top:8px"></p>
+  </div>
   <div class="card">
     <h3>Data 數據</h3>
     <div class="row">
@@ -127,7 +137,23 @@ const ADMIN_PW = 'ktmc2026';   // ← 改你自己嘅密碼
   document.getElementById('pwBtn').onclick = tryUnlock;
   document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
 })();
-
+/* ===== 更改密碼 Change password ===== */
+$('btnChangePw').onclick = async () => {
+  const pw = $('newPwInput').value;
+  const cf = $('newPwConfirm').value;
+  const status = $('pwStatus');
+  if (!pw){ status.textContent = '請輸入新密碼 Please enter new password'; status.style.color = '#dc2626'; return; }
+  if (pw.length < 4){ status.textContent = '密碼至少 4 個字元 At least 4 characters'; status.style.color = '#dc2626'; return; }
+  if (pw !== cf){ status.textContent = '兩次密碼不一致 Passwords do not match'; status.style.color = '#dc2626'; return; }
+  if (!confirm(`確認將系統密碼改為：${pw}\nConfirm changing system password to: ${pw}\n\n所有頁面將需要使用新密碼。All pages will require the new password.`)) return;
+  changePassword(pw, () => {
+    $('newPwInput').value = '';
+    $('newPwConfirm').value = '';
+    status.textContent = '✅ 已更改。建議清除其他裝置的 sessionStorage 以套用新密碼。 Changed. Recommend clearing sessionStorage on other devices.';
+    status.style.color = '#16a34a';
+    toast('Password changed 密碼已更改');
+  });
+};
 const $ = id => document.getElementById(id);
 let loaded = false;
 function counters(){ return (STATE && STATE.settings && STATE.settings.counters) || []; }
