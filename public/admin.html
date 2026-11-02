@@ -2,26 +2,9 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Admin 管理</title><link rel="stylesheet" href="css/style.css">
 </head><body>
-<div id="ktmcLogin" style="position:fixed; inset:0; background:linear-gradient(180deg,#f8fafc,#eef2f7); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px">
-  <div class="card" style="max-width:400px; width:100%; text-align:center">
-    <h3 style="border:none; padding:0; font-size:24px; margin-bottom:8px" id="ktmcLoginTitle">🔒 Login Required 需要登入</h3>
-    <p style="margin:0 0 4px" id="ktmcLoginDesc">請輸入密碼</p>
-    <p class="muted" style="margin:0 0 16px; font-size:13px" id="ktmcLoginDescEn">Enter the password to continue</p>
-    <input type="password" id="ktmcLoginPw" placeholder="Password 密碼" style="width:100%; text-align:center; font-size:18px; padding:14px">
-    <button id="ktmcLoginBtn" style="width:100%; margin-top:14px; font-size:16px; padding:14px">登入 Login</button>
-    <p id="ktmcLoginErr" style="margin-top:12px; color:#dc2626; font-weight:600; min-height:20px"></p>
-  </div>
-</div>
-<div id="ktmcLogin" style="position:fixed; inset:0; background:linear-gradient(180deg,#f8fafc,#eef2f7); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px">
-  <div class="card" style="max-width:400px; width:100%; text-align:center">
-    <h3 style="border:none; padding:0; font-size:24px; margin-bottom:8px">🔒 Login Required</h3>
-    <p style="margin:0 0 4px">請輸入系統密碼</p>
-    <p class="muted" style="margin:0 0 16px; font-size:13px">Enter the system password to continue</p>
-    <input type="password" id="ktmcLoginPw" placeholder="Password 密碼" style="width:100%; text-align:center; font-size:18px; padding:14px">
-    <button id="ktmcLoginBtn" style="width:100%; margin-top:14px; font-size:16px; padding:14px">登入 Login</button>
-    <p id="ktmcLoginErr" style="margin-top:12px; color:#dc2626; font-weight:600; min-height:20px"></p>
-  </div>
-</div>
+   /* 啟動管理員密碼驗證 Enable admin password check */
+   bindLoginForm(true); 
+   if (!KTMC_ADMIN_AUTHED) { window.onAfterLogin = () => location.reload(); }
 <div class="topbar"><span>Admin 管理</span><span class="chip" id="sessChip"></span></div>
 <div class="admin-wrap">
   <div class="card">
@@ -92,17 +75,27 @@
     </div>
     <p class="muted" style="margin-top:6px">58mm: content shrinks & left-aligned. 58mm 會自動縮小內容並靠左排版。</p>
   </div>
-  <div class="card">
-  <h3>Password 系統密碼</h3>
-  <p class="muted" style="margin-top:0">更改後，所有頁面（取號機、櫃位、顯示屏、管理）都必須使用新密碼登入。密碼更改後請通知所有操作人員。<br>
-  After changing, all pages (kiosk, counter, display, admin) require the new password. Please inform all operators.</p>
+<div class="card">
+  <h3>Operation Password 操作密碼</h3>
+  <p class="muted" style="margin-top:0">此密碼用於取號機、櫃位、顯示屏及首頁。更改後所有操作人員需使用新密碼登入。<br>
+  This password is used for the kiosk, counter, display, and index pages. All operators must use the new password after changing.</p>
   <div class="row">
-    <input type="password" id="newPwInput" placeholder="新密碼 New password" style="flex:1">
-    <input type="password" id="newPwConfirm" placeholder="確認密碼 Confirm" style="flex:1">
-    <button id="btnChangePw" class="btn-amber">更改 Change</button>
+    <input type="password" id="newUserPw" placeholder="新操作密碼 New operation password" style="flex:1">
+    <button id="btnChangeUserPw" class="btn-amber">更改 Change</button>
   </div>
-  <p class="muted" id="pwStatus" style="margin-top:8px"></p>
+  <p class="muted" id="userPwStatus" style="margin-top:8px"></p>
+</div>
+
+<div class="card">
+  <h3>Admin Password 管理員密碼</h3>
+  <p class="muted" style="margin-top:0">此密碼僅用於進入本管理頁面。預設為 ktmc881485。<br>
+  This password is only for accessing this admin page. Default is ktmc881485.</p>
+  <div class="row">
+    <input type="password" id="newAdminPw" placeholder="新管理員密碼 New admin password" style="flex:1">
+    <button id="btnChangeAdminPw" style="background:linear-gradient(135deg,#ef4444,#b91c1c); box-shadow:0 4px 14px rgba(239,68,68,.35)">更改 Change</button>
   </div>
+  <p class="muted" id="adminPwStatus" style="margin-top:8px"></p>
+</div>
   <div class="card">
     <h3>Data 數據</h3>
     <div class="row">
