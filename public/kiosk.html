@@ -144,7 +144,10 @@ let busy = false, backTimer = null, takenNo = null, shownAt = 0, rpTicket = null
 document.addEventListener('pointerdown', () => {
   if (takenNo != null && Date.now() - shownAt > 1500) goHome();
 });
-
+if (!KTMC_AUTHED){
+  /* 等待登入後再執行其他邏輯 Wait until logged in */
+  window.onAfterLogin = () => { /* 已登入 Logged in */ location.reload(); };
+}
 onState(s => {
   $('title').innerHTML = `${s.settings.title} <span class="hk">${s.settings.subtitle}</span>`;
   $('sessChip').textContent = 'Session 時段 ' + s.session.prefix;
