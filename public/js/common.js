@@ -59,8 +59,8 @@ let dbStarted = false;
 async function startDb(){
   if (dbStarted || !KTMC_AUTHED) return;
   dbStarted = true;
-  await whenAuthReady();
-  stateRef.on('value', s => { STATE = s.val() || JSON.parse(JSON.stringify(DEFAULTS)); listeners.forEach(f => f(STATE)); }, err => toast('⚠️ DB Read Error: ' + err.code));
+  // 直接讀取，不再等待匿名登入
+  stateRef.on('value', s => { STATE = s.val() || JSON.parse(JSON.stringify(DEFAULTS)); listeners.forEach(f => f(STATE)); }, err => toast('⚠️ DB Error: ' + err.code));
   stateRef.once('value').then(s => { if (!s.exists()) stateRef.set(DEFAULTS); }).catch(()=>{});
 }
 if (KTMC_AUTHED) startDb();
