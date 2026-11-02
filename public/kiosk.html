@@ -2,37 +2,38 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kiosk 取號</title><link rel="stylesheet" href="css/style.css">
 <style>
-.kiosk-wrap{min-height:calc(100vh - var(--nav-h));display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:24px;padding:24px;text-align:center}
-.k-hero-title{font-family:var(--sf-display);font-size:clamp(28px,4.5vw,48px);font-weight:600;letter-spacing:-.015em;line-height:1.1}
-.k-hero-sub{font-size:clamp(15px,2vw,21px);color:var(--muted);margin-top:6px;letter-spacing:-.016em}
-#takeBtn{width:min(560px,90vw);height:min(420px,52vh);border-radius:980px;
-  font-family:var(--sf-display);font-size:clamp(28px,4vw,44px);line-height:1.25;font-weight:600;letter-spacing:-.01em;
-  background:var(--blue);box-shadow:0 18px 50px rgba(0,113,227,.35);animation:breath 2.6s ease-in-out infinite}
-#takeBtn:hover{background:var(--blue-hover)}
-.k-stats{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-.k-stat{background:#fff;border:0;border-radius:14px;padding:10px 20px;box-shadow:var(--shadow);
-  font-family:var(--sf-display);font-size:19px;font-weight:600;letter-spacing:-.01em}
-.k-stat small{display:block;font-family:var(--sf-text);font-weight:600;color:var(--muted);font-size:12px;letter-spacing:-.01em;margin-bottom:2px}
-.k-note{max-width:640px;color:var(--muted);line-height:1.65;font-size:14px;letter-spacing:-.016em}
-.k-ticket-card{background:#fff;border:0;border-radius:28px;padding:30px 56px;box-shadow:var(--shadow)}
-.k-ticket-card .t-label{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:3px}
-.k-ticket-card .t-num{font-family:var(--sf-display);font-size:clamp(76px,12vw,144px);font-weight:600;
-  line-height:1.02;letter-spacing:-.015em;color:var(--text)}
-.k-ticket-card .t-meta{font-size:14px;color:var(--muted);font-weight:600;margin-top:6px}
-.k-back{font-size:13px;color:var(--muted)}
-.rp-chip{background:var(--gray);color:var(--text);box-shadow:none;padding:10px 18px;font-size:16px;font-weight:600;border-radius:980px;min-width:0}
-.rp-chip:hover{background:var(--gray-hover)}
-.rp-ticket{background:#fff;border:1.5px dashed #86868b;border-radius:12px;padding:16px;
-  font-size:13px;line-height:1.7;color:#000;text-align:left}
-.rp-ticket .badge{display:inline-block;border:1px solid #000;border-radius:4px;padding:2px 8px;font-weight:700;margin-bottom:8px}
-.rp-ticket .num{font-family:var(--sf-display);font-size:48px;font-weight:600;text-align:center;margin:6px 0;letter-spacing:2px}
+.kiosk-wrap{min-height:calc(100vh - 64px); display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:22px; padding:20px; text-align:center}
+.k-hero-title{font-size:clamp(26px,4vw,44px); font-weight:600; letter-spacing:1px}
+.k-hero-sub{font-size:clamp(15px,2vw,20px); color:var(--muted); margin-top:4px}
+#takeBtn{width:min(560px,90vw); height:min(420px,52vh); border-radius:36px;
+  font-size:clamp(28px,4vw,46px); line-height:1.3; font-weight:600;
+  background:linear-gradient(160deg,#3b82f6,#1e3a8a); box-shadow:0 18px 50px rgba(30,64,175,.45);
+  animation:breath 2.6s ease-in-out infinite}
+.k-stats{display:flex; gap:14px; flex-wrap:wrap; justify-content:center}
+.k-stat{background:#fff; border:1px solid var(--line); border-radius:14px; padding:10px 18px;
+  font-weight:700; box-shadow:var(--shadow); font-size:18px}
+.k-stat small{display:block; font-weight:600; color:var(--muted); font-size:12px; margin-bottom:2px}
+.k-note{max-width:640px; color:var(--muted); line-height:1.7; font-size:14px}
+.k-ticket-card{background:#fff; border:2px dashed #94a3b8; border-radius:20px; padding:26px 52px;
+  box-shadow:var(--shadow)}
+.k-ticket-card .t-label{font-size:13px; font-weight:700; color:var(--muted); letter-spacing:3px}
+.k-ticket-card .t-num{font-size:clamp(72px,12vw,140px); font-weight:600; line-height:1.05;
+  background:linear-gradient(135deg,#1d4ed8,#60a5fa); -webkit-background-clip:text; background-clip:text; color:transparent}
+.k-ticket-card .t-meta{font-size:14px; color:var(--muted); font-weight:600; margin-top:4px}
+.k-back{font-size:13px; color:var(--muted)}
+.rp-chip{background:#f1f5f9; color:var(--text); box-shadow:none; padding:10px 16px; font-size:16px; border-radius:10px}
+.rp-chip:hover{background:#e2e8f0}
+.rp-ticket{background:#fff; border:1.5px dashed #94a3b8; border-radius:12px; padding:16px;
+  font-size:13px; line-height:1.7; color:#000; text-align:left}
+.rp-ticket .badge{display:inline-block; border:1px solid #000; padding:2px 8px; font-weight:700; margin-bottom:8px}
+.rp-ticket .num{font-size:48px; font-weight:600; text-align:center; margin:6px 0; letter-spacing:2px}
 .rp-ticket .center{text-align:center}
 .rp-ticket .b{font-weight:700}
 @media (max-width:640px){
-  #takeBtn{height:min(300px,44vh)}
-  .k-ticket-card{padding:20px 30px}
-  .k-stat{font-size:16px;padding:8px 16px}
+  #takeBtn{height:min(300px,44vh); border-radius:26px}
+  .k-ticket-card{padding:18px 28px}
+  .k-stat{font-size:15px; padding:8px 14px}
 }
 </style>
 </head><body>
@@ -46,6 +47,7 @@
     <p id="ktmcLoginErr" style="margin-top:12px; color:#dc2626; font-weight:600; min-height:20px"></p>
   </div>
 </div>
+
 <div class="topbar"><span id="title">Kiosk 取號</span><span class="chip" id="sessChip"></span></div>
 
 <div class="kiosk-wrap" id="homeView">
@@ -55,33 +57,33 @@
   </div>
   <button id="takeBtn">TAKE A TICKET<br>取 號</button>
   <div class="k-stats">
-    <div class="k-stat"><small>Waiting 等候中</small><span id="statWait">0</span> 人</div>
-    <div class="k-stat"><small>Est. wait 預計等候</small><span id="statEst">—</span></div>
+    <div class="k-stat"><small>Waiting 等候中（人數 Persons）</small><span id="statWait">0</span></div>
+    <div class="k-stat"><small>Est. wait 預計等候（分鐘 Minutes）</small><span id="statEst">—</span></div>
   </div>
   <div class="row" style="justify-content:center">
-    <button id="btnReprint" class="btn-gray">REPRINT<br><span class="hk">重印號碼票</span></button>
+    <button id="btnReprint" class="btn-gray">REPRINT<br><span class="hk">重印憑條</span></button>
     <button id="btnPaper" class="btn-gray">PAPER<br><span class="hk">紙張設定</span></button>
   </div>
   <div class="k-note" id="note"></div>
 </div>
 
 <div class="kiosk-wrap" id="ticketView" style="display:none">
-  <div class="k-hero-title">Your Ticket 你的籌號</div>
+  <div class="k-hero-title">Your Ticket 您的籌號</div>
   <div class="k-ticket-card">
     <div class="t-label">TICKET 籌號</div>
     <div class="t-num" id="tvNum">A001</div>
     <div class="t-meta" id="tvMeta"></div>
   </div>
   <div class="k-stats">
-    <div class="k-stat"><small>Ahead 你前面</small><span id="tvAhead">0</span> 人</div>
-    <div class="k-stat"><small>Est. wait 預計等候</small><span id="tvEst">—</span></div>
+    <div class="k-stat"><small>Ahead 前方人數 Persons</small><span id="tvAhead">0</span></div>
+    <div class="k-stat"><small>Est. wait 預計等候（分鐘 Minutes）</small><span id="tvEst">—</span></div>
   </div>
   <div class="k-note">Please keep this ticket and watch for the display announcement. 請保留此籌號，並留意顯示屏廣播。</div>
   <div class="k-back" id="backCount"></div>
 </div>
 
 <div class="kiosk-wrap" id="reprintView" style="display:none">
-  <div class="k-hero-title">Reprint 重印號碼票</div>
+  <div class="k-hero-title">Reprint 重印憑條</div>
   <div class="card" id="rpLock" style="max-width:380px; width:100%; text-align:center">
     <p class="muted" style="margin-bottom:10px">Admin password required 需要管理員密碼</p>
     <input type="password" id="rpPw" placeholder="Password 密碼">
@@ -131,19 +133,21 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="js/config.js"></script><script src="js/common.js"></script><script src="js/tts.js"></script>
+<script src="js/common.js"></script>
 <script>
+/* 啟動操作密碼驗證 Enable operation password check */
+bindLoginForm(false);
+if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
+
 const $ = id => document.getElementById(id);
-const ADMIN_PW = 'ktmc2026';   // ← 與 admin 相同密碼
 let busy = false, backTimer = null, takenNo = null, shownAt = 0, rpTicket = null;
 
-/* 點擊／觸碰任何位置 → 返回首頁（只限取號票畫面） */
+/* 點擊／觸碰任何位置 → 返回首頁（僅限取號票畫面）
+   Tap anywhere → return to home (ticket view only) */
 document.addEventListener('pointerdown', () => {
   if (takenNo != null && Date.now() - shownAt > 1500) goHome();
 });
-/* 啟動操作密碼驗證 Enable operation password check */
-bindLoginForm(false); 
-if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
+
 onState(s => {
   $('title').innerHTML = `${s.settings.title} <span class="hk">${s.settings.subtitle}</span>`;
   $('sessChip').textContent = 'Session 時段 ' + s.session.prefix;
@@ -156,15 +160,15 @@ onState(s => {
   const counters = (s.settings.counters || []).length || 1;
   const avg = s.settings.avgMinutes || 3;
   $('statWait').textContent = w.length;
-  $('statEst').textContent = Math.ceil(w.length * avg / counters) + ' min';
+  $('statEst').textContent = Math.ceil(w.length * avg / counters);
   if (takenNo != null){
     const ahead = w.filter(t => t.no < takenNo).length;
     $('tvAhead').textContent = ahead;
-    $('tvEst').textContent = Math.ceil(ahead * avg / counters) + ' min';
+    $('tvEst').textContent = Math.ceil(ahead * avg / counters);
   }
 });
 
-/* ===== 號碼票模板 ===== */
+/* ===== 憑條模板 Ticket template ===== */
 function ticketHTML(t, reprint){
   return `
     ${reprint ? '<div class="t-reprint">Reprinted 重新列印</div>' : ''}
@@ -179,12 +183,12 @@ function ticketHTML(t, reprint){
       <div class="t-title">號碼票</div>
       <div class="t-title-en">QUEUE TICKET</div>
       <div class="t-num">${t.label}</div>
-      <div class="t-row">發出時間 Issuing Time: ${t.time}</div>
+      <div class="t-row">發行時間 Issuing Time: ${t.time}</div>
       ${reprint ? `<div class="t-row">重印時間 Reprint Time: ${nowLabel()}</div>` : ''}
       <div class="t-row">時段 Session: ${STATE.session.prefix}</div>
     </div>
     <div class="t-note">
-      請妥善保管此籌號，並留意螢幕及廣播。<br>
+      請妥善保管此籌號，並留意顯示屏及廣播。<br>
       Please keep this ticket and wait for your turn.<br>
       若連續叫號3次後仍未到場，籌號將作廢。<br>
       Your ticket will be canceled after three missed calls.<br>
@@ -193,7 +197,7 @@ function ticketHTML(t, reprint){
     </div>`;
 }
 
-/* 按紙張設定列印 */
+/* 按紙張設定列印 Print according to the paper setting */
 function setPrint(t, reprint){
   const pa = $('printArea');
   pa.className = (STATE.settings.paper === '58') ? 'p58' : '';
@@ -201,7 +205,7 @@ function setPrint(t, reprint){
   setTimeout(() => window.print(), 300);
 }
 
-/* ===== 取號 ===== */
+/* ===== 取號 Take a ticket ===== */
 $('takeBtn').onclick = async () => {
   if (busy) return; busy = true;
   const t = await takeTicket();
@@ -209,18 +213,18 @@ $('takeBtn').onclick = async () => {
   shownAt = Date.now();
 
   $('tvNum').textContent = t.label;
-  $('tvMeta').textContent = `Session ${STATE.session.prefix} · ${t.time}`;
+  $('tvMeta').textContent = `時段 Session ${STATE.session.prefix} · ${t.time}`;
   $('homeView').style.display = 'none';
   $('ticketView').style.display = 'flex';
 
   setPrint(t, false);
 
   let sec = 10;
-  $('backCount').textContent = `Tap anywhere to return 點擊任何位置返回 · ${sec}s`;
+  $('backCount').textContent = `Tap anywhere to return 點擊任何位置返回 · ${sec} 秒 s`;
   clearInterval(backTimer);
   backTimer = setInterval(() => {
     sec--;
-    $('backCount').textContent = `Tap anywhere to return 點擊任何位置返回 · ${sec}s`;
+    $('backCount').textContent = `Tap anywhere to return 點擊任何位置返回 · ${sec} 秒 s`;
     if (sec <= 0) goHome();
   }, 1000);
   busy = false;
@@ -235,7 +239,7 @@ function goHome(){
   $('homeView').style.display = 'flex';
 }
 
-/* ===== 紙張設定 ===== */
+/* ===== 紙張設定 Paper setting ===== */
 $('btnPaper').onclick = () => {
   $('homeView').style.display = 'none';
   $('paperView').style.display = 'flex';
@@ -247,18 +251,21 @@ $('btnPaper').onclick = () => {
 $('ppBack1').onclick = goHome;
 $('ppBack2').onclick = goHome;
 $('ppUnlock').onclick = () => {
-  if ($('ppPw').value === ADMIN_PW){
-    $('ppLock').style.display = 'none';
-    $('ppChoose').style.display = 'block';
-  } else {
-    $('ppErr').textContent = 'Wrong password 密碼錯誤';
-  }
+  const pw = $('ppPw').value;
+  stateRef.child('settings/adminPw').once('value').then(snap => {
+    if (pw === (snap.val() || 'ktmc881485')) {
+      $('ppLock').style.display = 'none';
+      $('ppChoose').style.display = 'block';
+    } else {
+      $('ppErr').textContent = 'Wrong password 密碼錯誤';
+    }
+  });
 };
 $('ppPw').addEventListener('keydown', e => { if (e.key === 'Enter') $('ppUnlock').onclick(); });
 $('pp80').onclick = async () => { await saveSettings({ ...STATE.settings, paper:'80' }); toast('Paper 80mm saved 已儲存'); };
 $('pp58').onclick = async () => { await saveSettings({ ...STATE.settings, paper:'58' }); toast('Paper 58mm saved 已儲存'); };
 
-/* ===== 重印 ===== */
+/* ===== 重印 Reprint ===== */
 $('btnReprint').onclick = () => {
   $('homeView').style.display = 'none';
   $('reprintView').style.display = 'flex';
@@ -275,13 +282,16 @@ $('rpBack3').onclick = () => {
   $('rpList').style.display = 'block';
 };
 $('rpUnlock').onclick = () => {
-  if ($('rpPw').value === ADMIN_PW){
-    $('rpLock').style.display = 'none';
-    $('rpList').style.display = 'block';
-    renderRpList();
-  } else {
-    $('rpErr').textContent = 'Wrong password 密碼錯誤';
-  }
+  const pw = $('rpPw').value;
+  stateRef.child('settings/adminPw').once('value').then(snap => {
+    if (pw === (snap.val() || 'ktmc881485')) {
+      $('rpLock').style.display = 'none';
+      $('rpList').style.display = 'block';
+      renderRpList();
+    } else {
+      $('rpErr').textContent = 'Wrong password 密碼錯誤';
+    }
+  });
 };
 $('rpPw').addEventListener('keydown', e => { if (e.key === 'Enter') $('rpUnlock').onclick(); });
 
@@ -292,7 +302,7 @@ function renderRpList(){
   ).join('') || '<p class="muted">No tickets 暫無籌號</p>';
 }
 
-/* 選取號碼 → 預覽 */
+/* 選擇號碼 → 預覽 Select a number → preview */
 $('rpItems').onclick = e => {
   const k = e.target.dataset.k; if (!k) return;
   const t = ticketsArr().find(x => x.key === k); if (!t) return;
@@ -304,7 +314,7 @@ $('rpItems').onclick = e => {
       <div class="center" style="font-size:11px">KWUN TONG MARYKNOLL COLLEGE</div>
       <div class="center" style="margin-top:6px">號碼票 QUEUE TICKET</div>
       <div class="num">${t.label}</div>
-      <div>發出時間 Issuing Time: ${t.time}</div>
+      <div>發行時間 Issuing Time: ${t.time}</div>
       <div>重印時間 Reprint Time: ${nowLabel()}</div>
       <div>時段 Session: ${STATE.session.prefix}</div>
     </div>`;
@@ -312,7 +322,7 @@ $('rpItems').onclick = e => {
   $('rpPreview').style.display = 'block';
 };
 
-/* 確認後列印 */
+/* 確認後列印 Print after confirmation */
 $('rpPrint').onclick = () => {
   if (!rpTicket) return;
   setPrint(rpTicket, true);
