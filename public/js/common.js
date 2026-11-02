@@ -1,4 +1,17 @@
 /* ===== KTMC 排隊系統核心邏輯 KTMC Queue System Core Logic ===== */
+
+/* ===== Firebase 設定（已內嵌，無需 config.js）
+   Firebase configuration (inlined; config.js no longer required) ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDMBiSM4oGSDE3khRISIxtxDCJJTLaxm0",
+  authDomain: "ktmc-queue-system.firebaseapp.com",
+  databaseURL: "https://ktmc-queue-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ktmc-queue-system",
+  storageBucket: "ktmc-queue-system.firebasestorage.app",
+  messagingSenderId: "1098822703041",
+  appId: "1:1098822703041:web:c010a95bf5c71c478a0140"
+};
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const stateRef = db.ref('queue');
@@ -201,19 +214,27 @@ async function takeTicket(){
    Call next (auto-complete the current ticket) */
 async function callNext(id){
   const updates = {};
+
+  // 自動完成當前正在服務的號碼 Auto-complete the ticket currently being served
   const cur = currentOf(id);
   if (cur) updates['tickets/' + cur.key + '/status'] = 'done';
 
+  // 檢查等候隊列 Check the waiting queue
   const w = waiting()[0];
   if (!w) {
+    // 若無人排隊但已完成當前號碼，仍然更新資料庫
+    // If no one is waiting but a ticket was completed, still update the database
     if (Object.keys(updates).length > 0) await stateRef.update(updates);
     return null;
   }
+
+  // 呼叫下一位 Call the next ticket
   const seq = await nextSeq('callSeq');
   updates['tickets/' + w.key + '/status'] = 'called';
   updates['tickets/' + w.key + '/counter'] = Number(id);
   updates['tickets/' + w.key + '/calledAt'] = Date.now();
   updates['lastCall'] = { ticket:{label:w.label,no:w.no}, counter:Number(id), at:Date.now(), seq };
+
   await stateRef.update(updates);
   return w;
 }
@@ -233,14 +254,17 @@ async function recall(id){
 async function callNumber(id, raw){
   const num = Number(String(raw).toUpperCase().replace(/^[A-Z]+/,''));
   const t = ticketsArr().find(t=>t.no===num && t.status!=='done'); if (!t) return null;
+
   const updates = {};
   const cur = currentOf(id);
   if (cur) updates['tickets/' + cur.key + '/status'] = 'done';
+
   const seq = await nextSeq('callSeq');
   updates['tickets/' + t.key + '/status'] = 'called';
   updates['tickets/' + t.key + '/counter'] = Number(id);
   updates['tickets/' + t.key + '/calledAt'] = Date.now();
   updates['lastCall'] = { ticket:{label:t.label,no:t.no}, counter:Number(id), at:Date.now(), seq };
+
   await stateRef.update(updates);
   return t;
 }
