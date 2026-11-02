@@ -3,6 +3,19 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const stateRef = db.ref('queue');
 
+/* ===== 靜默匿名登入：僅為滿足 Rules 的 auth != null，非人類登入
+   Silent anonymous sign-in: satisfies the Rules' auth != null requirement only; not a human login ===== */
+function whenAuthReady(){
+  return new Promise(res => {
+    let done = false;
+    const un = firebase.auth().onAuthStateChanged(u => {
+      if (u && !done){ done = true; un(); res(true); }
+    });
+    setTimeout(() => { if (!done){ done = true; un(); res(false); } }, 8000);
+  });
+}
+firebase.auth().signInAnonymously().catch(e => console.error('Anonymous sign-in failed 匿名登入失敗', e));
+
 const DEFAULTS = {
   settings: {
     title: 'Queue Up', subtitle: '請排隊取號',
@@ -28,11 +41,13 @@ let KTMC_ADMIN_AUTHED = sessionStorage.getItem('ktmcAdminOk') === '1';
 let KTMC_USER_AUTHED  = sessionStorage.getItem('ktmcUserOk') === '1';
 let KTMC_AUTHED = KTMC_ADMIN_AUTHED || KTMC_USER_AUTHED;
 
-/* 驗證通過後才連接資料庫 Connect to database only after authentication */
+/* 密碼驗證通過且 Firebase 登入就緒後才連接資料庫
+   Connect to the database only after password verification and Firebase sign-in are ready */
 let dbStarted = false;
-function startDb(){
+async function startDb(){
   if (dbStarted || !KTMC_AUTHED) return;
   dbStarted = true;
+  await whenAuthReady();
   stateRef.on('value', s => { STATE = s.val() || JSON.parse(JSON.stringify(DEFAULTS)); listeners.forEach(f => f(STATE)); });
   stateRef.once('value').then(s => { if (!s.exists()) stateRef.set(DEFAULTS); });
 }
@@ -40,38 +55,42 @@ if (KTMC_AUTHED) startDb();
 
 /* 驗證管理員密碼 Verify administrator password */
 function checkAdminPw(inputPw, onResult){
-  stateRef.child('settings/adminPw').once('value').then(snap => {
-    const stored = snap.val() || DEFAULT_ADMIN_PW;
-    if (inputPw === stored){
-      KTMC_ADMIN_AUTHED = true; KTMC_AUTHED = true;
-      sessionStorage.setItem('ktmcAdminOk', '1');
-      startDb(); onResult(true);
-    } else onResult(false);
-  }).catch(() => {
-    /* 資料庫未能連線時使用預設密碼 Fallback to default password when database is unreachable */
-    if (inputPw === DEFAULT_ADMIN_PW){
-      KTMC_ADMIN_AUTHED = true; KTMC_AUTHED = true;
-      sessionStorage.setItem('ktmcAdminOk', '1');
-      startDb(); onResult(true);
-    } else onResult(false);
+  whenAuthReady().then(() => {
+    stateRef.child('settings/adminPw').once('value').then(snap => {
+      const stored = snap.val() || DEFAULT_ADMIN_PW;
+      if (inputPw === stored){
+        KTMC_ADMIN_AUTHED = true; KTMC_AUTHED = true;
+        sessionStorage.setItem('ktmcAdminOk', '1');
+        startDb(); onResult(true);
+      } else onResult(false);
+    }).catch(() => {
+      /* 資料庫未能連線時使用預設密碼 Fallback to default password when database is unreachable */
+      if (inputPw === DEFAULT_ADMIN_PW){
+        KTMC_ADMIN_AUTHED = true; KTMC_AUTHED = true;
+        sessionStorage.setItem('ktmcAdminOk', '1');
+        startDb(); onResult(true);
+      } else onResult(false);
+    });
   });
 }
 
 /* 驗證操作密碼 Verify operation password */
 function checkUserPw(inputPw, onResult){
-  stateRef.child('settings/userPw').once('value').then(snap => {
-    const stored = snap.val() || DEFAULT_USER_PW;
-    if (inputPw === stored){
-      KTMC_USER_AUTHED = true; KTMC_AUTHED = true;
-      sessionStorage.setItem('ktmcUserOk', '1');
-      startDb(); onResult(true);
-    } else onResult(false);
-  }).catch(() => {
-    if (inputPw === DEFAULT_USER_PW){
-      KTMC_USER_AUTHED = true; KTMC_AUTHED = true;
-      sessionStorage.setItem('ktmcUserOk', '1');
-      startDb(); onResult(true);
-    } else onResult(false);
+  whenAuthReady().then(() => {
+    stateRef.child('settings/userPw').once('value').then(snap => {
+      const stored = snap.val() || DEFAULT_USER_PW;
+      if (inputPw === stored){
+        KTMC_USER_AUTHED = true; KTMC_AUTHED = true;
+        sessionStorage.setItem('ktmcUserOk', '1');
+        startDb(); onResult(true);
+      } else onResult(false);
+    }).catch(() => {
+      if (inputPw === DEFAULT_USER_PW){
+        KTMC_USER_AUTHED = true; KTMC_AUTHED = true;
+        sessionStorage.setItem('ktmcUserOk', '1');
+        startDb(); onResult(true);
+      } else onResult(false);
+    });
   });
 }
 
@@ -174,27 +193,19 @@ async function takeTicket(){
    Call next (auto-complete the current ticket) */
 async function callNext(id){
   const updates = {};
-
-  // 自動完成當前正在服務的號碼 Auto-complete the ticket currently being served
   const cur = currentOf(id);
   if (cur) updates['tickets/' + cur.key + '/status'] = 'done';
 
-  // 檢查等候隊列 Check the waiting queue
   const w = waiting()[0];
   if (!w) {
-    // 若無人排隊但已完成當前號碼，仍然更新資料庫
-    // If no one is waiting but a ticket was completed, still update the database
     if (Object.keys(updates).length > 0) await stateRef.update(updates);
     return null;
   }
-
-  // 呼叫下一位 Call the next ticket
   const seq = await nextSeq('callSeq');
   updates['tickets/' + w.key + '/status'] = 'called';
   updates['tickets/' + w.key + '/counter'] = Number(id);
   updates['tickets/' + w.key + '/calledAt'] = Date.now();
   updates['lastCall'] = { ticket:{label:w.label,no:w.no}, counter:Number(id), at:Date.now(), seq };
-
   await stateRef.update(updates);
   return w;
 }
@@ -214,17 +225,14 @@ async function recall(id){
 async function callNumber(id, raw){
   const num = Number(String(raw).toUpperCase().replace(/^[A-Z]+/,''));
   const t = ticketsArr().find(t=>t.no===num && t.status!=='done'); if (!t) return null;
-
   const updates = {};
   const cur = currentOf(id);
   if (cur) updates['tickets/' + cur.key + '/status'] = 'done';
-
   const seq = await nextSeq('callSeq');
   updates['tickets/' + t.key + '/status'] = 'called';
   updates['tickets/' + t.key + '/counter'] = Number(id);
   updates['tickets/' + t.key + '/calledAt'] = Date.now();
   updates['lastCall'] = { ticket:{label:t.label,no:t.no}, counter:Number(id), at:Date.now(), seq };
-
   await stateRef.update(updates);
   return t;
 }
