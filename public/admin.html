@@ -116,10 +116,23 @@
   <button id="btnSave">SAVE 儲存所有設定</button>
 </div>
 <div id="toast" class="toast"></div>
+
+<!-- 1. Firebase 官方 SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="js/config.js"></script><script src="js/common.js"></script><script src="js/tts.js"></script>
+
+<!-- 2. 核心邏輯與語音 (注意：config.js 已刪除) -->
+<script src="js/common.js"></script>
+<script src="js/tts.js"></script>
+
+<!-- 3. 頁面專屬邏輯 -->
+<script>
+/* 啟動管理員密碼驗證 Enable administrator password check */
+bindLoginForm(true);
+if (!KTMC_ADMIN_AUTHED) { window.onAfterLogin = () => location.reload(); }
+
+// ... (下面接你原來的 admin 程式碼) ...
 <script>
 /* 啟動管理員密碼驗證 Enable administrator password check */
 bindLoginForm(true);
