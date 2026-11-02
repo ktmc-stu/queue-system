@@ -5,16 +5,23 @@ const stateRef = db.ref('queue');
 
 /* ===== 靜默匿名登入：僅為滿足 Rules 的 auth != null，非人類登入
    Silent anonymous sign-in: satisfies the Rules' auth != null requirement only; not a human login ===== */
+function authAvailable(){ return typeof firebase !== 'undefined' && typeof firebase.auth === 'function'; }
+function silentSignIn(){
+  if (!authAvailable()) return;
+  firebase.auth().signInAnonymously().catch(e => console.error('Anonymous sign-in failed 匿名登入失敗：', e.code || e.message));
+}
 function whenAuthReady(){
   return new Promise(res => {
+    if (!authAvailable()) return res(false);
     let done = false;
-    const un = firebase.auth().onAuthStateChanged(u => {
-      if (u && !done){ done = true; un(); res(true); }
-    });
-    setTimeout(() => { if (!done){ done = true; un(); res(false); } }, 8000);
+    const finish = v => { if (!done){ done = true; res(v); } };
+    const un = firebase.auth().onAuthStateChanged(u => { if (u){ try{ un(); }catch(e){} finish(true); } });
+    silentSignIn();
+    setTimeout(() => finish(false), 5000);   // 超時降級 Timeout fallback
   });
 }
-firebase.auth().signInAnonymously().catch(e => console.error('Anonymous sign-in failed 匿名登入失敗', e));
+silentSignIn();
+if (!authAvailable()) console.error('firebase-auth-compat.js 未載入 not loaded');
 
 const DEFAULTS = {
   settings: {
@@ -135,13 +142,14 @@ function bindLoginForm(isAdmin){
   const tryLogin = () => {
     const v = input.value;
     if (!v) return;
+    if (err){ err.style.color = '#64748b'; err.textContent = '驗證中… Verifying…'; }
     (isAdmin ? checkAdminPw : checkUserPw)(v, ok => {
       if (ok){
         overlay.style.display = 'none';
         if (typeof window.onAfterLogin === 'function') window.onAfterLogin();
         else location.reload();
       } else {
-        if (err) err.textContent = '密碼錯誤 Wrong password';
+        if (err){ err.style.color = '#dc2626'; err.textContent = '密碼錯誤 Wrong password'; }
         input.value = '';
         input.focus();
       }
