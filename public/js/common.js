@@ -1,4 +1,4 @@
-/* ===== KTMC 排隊系統核心邏輯 (終極防錯版) ===== */
+/* ===== KTMC 排隊系統核心邏輯 (極簡直連版，不依賴 Auth) ===== */
 
 const firebaseConfig = {
   apiKey: "AIzaSyDMBiSM4oGSDE3khRISIxtxDCJJTLaxm0",
@@ -10,28 +10,9 @@ const firebaseConfig = {
   appId: "1:1098822703041:web:c010a95bf5c71c478a0140"
 };
 
-try { firebase.initializeApp(firebaseConfig); } catch(e) { console.warn('Firebase already initialized'); }
+try { firebase.initializeApp(firebaseConfig); } catch(e) {}
 const db = firebase.database();
 const stateRef = db.ref('queue');
-
-function authAvailable(){ return typeof firebase !== 'undefined' && typeof firebase.auth === 'function'; }
-function silentSignIn(){
-  if (!authAvailable()) return;
-  try { firebase.auth().signInAnonymously().catch(e => console.warn('Auth fail', e.code)); } catch(e) {}
-}
-function whenAuthReady(){
-  return new Promise(res => {
-    if (!authAvailable()) return res(false);
-    let done = false;
-    const finish = v => { if (!done){ done = true; res(v); } };
-    try {
-      const un = firebase.auth().onAuthStateChanged(u => { if (u){ try{ un(); }catch(e){} finish(true); } });
-    } catch(e) {}
-    silentSignIn();
-    setTimeout(() => finish(false), 5000);
-  });
-}
-silentSignIn();
 
 const DEFAULTS = {
   settings: {
@@ -48,44 +29,56 @@ let STATE = null; const listeners = [];
 const DEFAULT_ADMIN_PW = 'ktmc881485';
 const DEFAULT_USER_PW = 'ktmc2026';
 
-let KTMC_ADMIN_AUTHED = false, KTMC_USER_AUTHED = false;
+let KTMC_ADMIN_AUTHED = false, KTMC_USER_AUTHED = false, KTMC_AUTHED = false;
 try {
   KTMC_ADMIN_AUTHED = sessionStorage.getItem('ktmcAdminOk') === '1';
   KTMC_USER_AUTHED = sessionStorage.getItem('ktmcUserOk') === '1';
-} catch(e) { console.warn('SessionStorage blocked'); }
-let KTMC_AUTHED = KTMC_ADMIN_AUTHED || KTMC_USER_AUTHED;
+  KTMC_AUTHED = KTMC_ADMIN_AUTHED || KTMC_USER_AUTHED;
+} catch(e) {}
 
 let dbStarted = false;
-async function startDb(){
+function startDb(){
   if (dbStarted || !KTMC_AUTHED) return;
   dbStarted = true;
-  // 直接讀取，不再等待匿名登入
-  stateRef.on('value', s => { STATE = s.val() || JSON.parse(JSON.stringify(DEFAULTS)); listeners.forEach(f => f(STATE)); }, err => toast('⚠️ DB Error: ' + err.code));
+  // 直接讀取資料庫，不再等待任何登入
+  stateRef.on('value', s => { 
+    STATE = s.val() || JSON.parse(JSON.stringify(DEFAULTS)); 
+    listeners.forEach(f => f(STATE)); 
+  }, err => toast('⚠️ DB Error: ' + err.code));
   stateRef.once('value').then(s => { if (!s.exists()) stateRef.set(DEFAULTS); }).catch(()=>{});
 }
 if (KTMC_AUTHED) startDb();
 
+// 直接讀取密碼，不依賴任何 Auth 機制
 function checkAdminPw(inputPw, onResult){
-  whenAuthReady().then(() => {
-    stateRef.child('settings/adminPw').once('value').then(snap => {
-      if (inputPw === (snap.val() || DEFAULT_ADMIN_PW)){
-        KTMC_ADMIN_AUTHED = true; KTMC_AUTHED = true;
-        try { sessionStorage.setItem('ktmcAdminOk', '1'); } catch(e){}
-        startDb(); onResult(true);
-      } else onResult(false);
-    }).catch(() => { if (inputPw === DEFAULT_ADMIN_PW){ KTMC_ADMIN_AUTHED=true; KTMC_AUTHED=true; try{sessionStorage.setItem('ktmcAdminOk','1');}catch(e){} startDb(); onResult(true);} else onResult(false); });
+  stateRef.child('settings/adminPw').once('value').then(snap => {
+    if (inputPw === (snap.val() || DEFAULT_ADMIN_PW)){
+      KTMC_ADMIN_AUTHED = true; KTMC_AUTHED = true;
+      try { sessionStorage.setItem('ktmcAdminOk', '1'); } catch(e){}
+      startDb(); onResult(true);
+    } else onResult(false);
+  }).catch(() => { 
+    if (inputPw === DEFAULT_ADMIN_PW){ 
+      KTMC_ADMIN_AUTHED=true; KTMC_AUTHED=true; 
+      try{sessionStorage.setItem('ktmcAdminOk','1');}catch(e){} 
+      startDb(); onResult(true);
+    } else onResult(false); 
   });
 }
 
 function checkUserPw(inputPw, onResult){
-  whenAuthReady().then(() => {
-    stateRef.child('settings/userPw').once('value').then(snap => {
-      if (inputPw === (snap.val() || DEFAULT_USER_PW)){
-        KTMC_USER_AUTHED = true; KTMC_AUTHED = true;
-        try { sessionStorage.setItem('ktmcUserOk', '1'); } catch(e){}
-        startDb(); onResult(true);
-      } else onResult(false);
-    }).catch(() => { if (inputPw === DEFAULT_USER_PW){ KTMC_USER_AUTHED=true; KTMC_AUTHED=true; try{sessionStorage.setItem('ktmcUserOk','1');}catch(e){} startDb(); onResult(true);} else onResult(false); });
+  stateRef.child('settings/userPw').once('value').then(snap => {
+    if (inputPw === (snap.val() || DEFAULT_USER_PW)){
+      KTMC_USER_AUTHED = true; KTMC_AUTHED = true;
+      try { sessionStorage.setItem('ktmcUserOk', '1'); } catch(e){}
+      startDb(); onResult(true);
+    } else onResult(false);
+  }).catch(() => { 
+    if (inputPw === DEFAULT_USER_PW){ 
+      KTMC_USER_AUTHED=true; KTMC_AUTHED=true; 
+      try{sessionStorage.setItem('ktmcUserOk','1');}catch(e){} 
+      startDb(); onResult(true);
+    } else onResult(false); 
   });
 }
 
@@ -185,7 +178,7 @@ async function setPrefix(p){
   const ups = {}; ticketsArr().forEach(t => { if (t.status==='waiting') ups['tickets/'+t.key+'/status'] = 'expired'; });
   ups['session'] = { prefix: p, next: 1 }; ups['lastCall'] = null; await stateRef.update(ups);
 }
-async function advance(){ const c = STATE.session.prefix; await setPrefix(c.length===1 ? String.fromCharCode(c.charCodeAt(0)+1) : c+'A'); }
+async function advance(){ if(!STATE) return; const c = STATE.session.prefix; await setPrefix(c.length===1 ? String.fromCharCode(c.charCodeAt(0)+1) : c+'A'); }
 async function saveSettings(s){ await stateRef.child('settings').update(s); }
 async function clearTickets(){ await stateRef.update({ tickets: null, lastCall: null, lastUndo: null, lastStop: null, nowPlaying: null, 'session/next': 1 }); }
 async function pauseCounter(id){ await stateRef.child('counters/' + id + '/paused').set(true); }
