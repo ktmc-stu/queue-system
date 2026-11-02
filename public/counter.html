@@ -2,6 +2,16 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Counter 櫃位</title><link rel="stylesheet" href="css/style.css">
 </head><body>
+<div id="ktmcLogin" style="position:fixed; inset:0; background:linear-gradient(180deg,#f8fafc,#eef2f7); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px">
+  <div class="card" style="max-width:400px; width:100%; text-align:center">
+    <h3 style="border:none; padding:0; font-size:24px; margin-bottom:8px">🔒 Login Required</h3>
+    <p style="margin:0 0 4px">請輸入系統密碼</p>
+    <p class="muted" style="margin:0 0 16px; font-size:13px">Enter the system password to continue</p>
+    <input type="password" id="ktmcLoginPw" placeholder="Password 密碼" style="width:100%; text-align:center; font-size:18px; padding:14px">
+    <button id="ktmcLoginBtn" style="width:100%; margin-top:14px; font-size:16px; padding:14px">登入 Login</button>
+    <p id="ktmcLoginErr" style="margin-top:12px; color:#dc2626; font-weight:600; min-height:20px"></p>
+  </div>
+</div>
 <div class="topbar"><span id="title">Counter</span><span class="chip" id="sessChip"></span></div>
 <div class="counter-wrap">
   <div class="card">
