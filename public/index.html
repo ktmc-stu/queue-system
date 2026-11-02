@@ -39,10 +39,9 @@
 <script src="js/config.js"></script><script src="js/common.js"></script>
 <script src="js/config.js"></script><script src="js/common.js"></script>
 <script>
-if (!KTMC_AUTHED){
-  /* 等待登入後再執行其他邏輯 Wait until logged in */
-  window.onAfterLogin = () => { /* 已登入 Logged in */ location.reload(); };
-}
+/* 啟動操作密碼驗證 Enable operation password check */
+bindLoginForm(false); 
+if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
 onState(s => {
   const cs = (s.settings.counters || []);
   document.getElementById('counterList').innerHTML = cs.map(c =>
