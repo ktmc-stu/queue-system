@@ -1,7 +1,18 @@
-<!doctype html><html lang="en"><head>
+<!doctype html><html lang="zh-HK"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Display 顯示屏</title><link rel="stylesheet" href="css/style.css">
 </head><body>
+<div id="ktmcLogin" style="position:fixed; inset:0; background:linear-gradient(180deg,#f8fafc,#eef2f7); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px">
+  <div class="card" style="max-width:400px; width:100%; text-align:center">
+    <h3 style="border:none; padding:0; font-size:24px; margin-bottom:8px" id="ktmcLoginTitle">🔒 Login Required 需要登入</h3>
+    <p style="margin:0 0 4px" id="ktmcLoginDesc">請輸入密碼</p>
+    <p class="muted" style="margin:0 0 16px; font-size:13px" id="ktmcLoginDescEn">Enter the password to continue</p>
+    <input type="password" id="ktmcLoginPw" placeholder="Password 密碼" style="width:100%; text-align:center; font-size:18px; padding:14px">
+    <button id="ktmcLoginBtn" style="width:100%; margin-top:14px; font-size:16px; padding:14px">登入 Login</button>
+    <p id="ktmcLoginErr" style="margin-top:12px; color:#dc2626; font-weight:600; min-height:20px"></p>
+  </div>
+</div>
+
 <div class="display-wrap">
   <div class="display-header">
     <span id="footerTitle"></span>
@@ -14,11 +25,17 @@
   </div>
 </div>
 <button id="startTts">START SOUND 開啟廣播聲音</button>
+<div id="toast" class="toast"></div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="js/config.js"></script><script src="js/common.js"></script><script src="js/tts.js"></script>
+<script src="js/common.js"></script><script src="js/tts.js"></script>
 <script>
+/* 啟動操作密碼驗證 Enable operation password check */
+bindLoginForm(false);
+if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
+
 let lastSeq = 0, lastUndoSeq = 0, lastStopSeq = 0;
 let pending = [], announcing = false;
 let flashId = null, flashUntil = 0;
@@ -35,10 +52,10 @@ onState(s => {
   const lc = s.lastCall;
   if (lc){
     const c = counterById(lc.counter);
-    document.getElementById('ticker').textContent = `Now Calling ${lc.ticket.label} → ${c.name} · 請 ${lc.ticket.label} 到${c.nameZh}`;
+    document.getElementById('ticker').textContent = `Now Calling 現正呼叫 ${lc.ticket.label} → ${c.name} ${c.nameZh} · 請 ${lc.ticket.label} 到${c.nameZh}`;
   }
 
-  /* 撤回信號 */
+  /* 撤回信號 Undo signal */
   const lu = s.lastUndo;
   if (lu && lu.seq !== lastUndoSeq){
     lastUndoSeq = lu.seq;
@@ -52,7 +69,7 @@ onState(s => {
     }
   }
 
-  /* 停止信號（'*' = 全部停止） */
+  /* 停止信號（'*' = 全部停止） Stop signal ('*' = stop all) */
   const ls = s.lastStop;
   if (ls && ls.seq !== lastStopSeq){
     lastStopSeq = ls.seq;
@@ -91,9 +108,9 @@ function renderGrid(s){
     const active = flashId != null && Number(id) === Number(flashId) && now < flashUntil;
     const num = String(c.name || '').replace(/\D/g,'') || String(id);
 
-    /* 暫停服務判斷 */
+    /* 暫停服務判斷 Pause check */
     const paused = s.counters && s.counters[id] && s.counters[id].paused;
-        const numHtml = paused
+    const numHtml = paused
       ? '<span class="paused-txt">Suspended<small>暫停服務</small></span>'
       : (t ? t.label : '—');
 
@@ -133,6 +150,7 @@ document.getElementById('startTts').onclick = () => {
   document.getElementById('startTts').style.display = 'none';
 };
 
+/* 垂直自動滾動 Vertical auto-scroll */
 function autoScrollV(el, step, interval, holdMs){
   step = step || 2; interval = interval || 40; holdMs = holdMs || 2000;
   if (!el) return;
@@ -146,6 +164,8 @@ function autoScrollV(el, step, interval, holdMs){
     } else { el.scrollTop += step; }
   }, interval);
 }
+
+/* 水平自動滾動 Horizontal auto-scroll */
 function autoScrollH(el, step, interval, holdMs){
   step = step || 2; interval = interval || 40; holdMs = holdMs || 2000;
   if (!el) return;
