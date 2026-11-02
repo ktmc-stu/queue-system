@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head>
+<!doctype html><html lang="zh-HK"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Counter 櫃位</title><link rel="stylesheet" href="css/style.css">
 </head><body>
@@ -12,6 +12,7 @@
     <p id="ktmcLoginErr" style="margin-top:12px; color:#dc2626; font-weight:600; min-height:20px"></p>
   </div>
 </div>
+
 <div class="topbar"><span id="title">Counter</span><span class="chip" id="sessChip"></span></div>
 <div class="counter-wrap">
   <div class="card">
@@ -23,7 +24,7 @@
     <button id="btnRecall" class="btn-amber">RECALL<br><span class="hk">重新呼叫</span></button>
     <button id="btnComplete" class="btn-green">COMPLETE<br><span class="hk">完成</span></button>
     <button id="btnUndo" class="btn-gray">UNDO<br><span class="hk">撤回上一步</span></button>
-    <button id="btnStop" class="btn-red">STOP<br><span class="hk">停止播報</span></button>
+    <button id="btnStop" style="background:linear-gradient(135deg,#ef4444,#b91c1c); box-shadow:0 4px 14px rgba(239,68,68,.35)">STOP<br><span class="hk">停止播報</span></button>
     <button id="btnPause" class="btn-gray">PAUSE<br><span class="hk">暫停服務</span></button>
     <button id="btnCallNum" class="btn-gray">CALL NUMBER<br><span class="hk">指定號碼</span></button>
   </div>
@@ -44,13 +45,15 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="js/config.js"></script><script src="js/common.js"></script><script src="js/tts.js"></script>
+<script src="js/common.js"></script><script src="js/tts.js"></script>
 <script>
+/* 啟動操作密碼驗證 Enable operation password check */
+bindLoginForm(false);
+if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
+
 const $ = id => document.getElementById(id);
 const cid = new URLSearchParams(location.search).get('id') || 1;
-/* 啟動操作密碼驗證 Enable operation password check */
-bindLoginForm(false); 
-if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
+
 onState(s => {
   const c = counterById(cid);
   $('title').innerHTML = `${c.name} <span class="hk">${c.nameZh}</span>`;
@@ -65,28 +68,30 @@ onState(s => {
     called.map(t => `<span class="called-chip${String(t.counter)===String(cid)?' cur':''}">${t.label}</span>`).join('')
     || '<span class="muted">No one 暫無</span>';
 
-  /* 暫停按鈕狀態更新 */
+  /* 暫停按鈕狀態更新 Pause button state update */
   const paused = isCounterPaused(cid);
   const btnP = $('btnPause');
   if (paused) {
     btnP.innerHTML = 'RESUME<br><span class="hk">恢復服務</span>';
-    btnP.className = 'btn-green';
+    btnP.style.background = 'linear-gradient(135deg,#10b981,#047857)';
+    btnP.style.boxShadow = '0 4px 14px rgba(16,185,129,.35)';
   } else {
     btnP.innerHTML = 'PAUSE<br><span class="hk">暫停服務</span>';
+    btnP.style.background = '';
     btnP.className = 'btn-gray';
   }
 });
 
-$('btnNext').onclick = async () => { const t = await callNext(cid); toast(t ? 'Called 已叫 ' + t.label : 'Not found 找不到該籌號'); };
+$('btnNext').onclick = async () => { const t = await callNext(cid); toast(t ? 'Called 已叫 ' + t.label : 'No waiting 無人等候'); };
 $('btnRecall').onclick = async () => { const t = currentOf(cid); if (!t) return toast('Nothing to recall 無可重呼'); await recall(cid); toast('Recalled 已重呼 ' + t.label); };
 $('btnComplete').onclick = async () => { const t = currentOf(cid); if (!t) return toast('No active ticket 無服務中籌號'); await completeTicket(t.key); toast('Completed 已完成 ' + t.label); };
 $('btnUndo').onclick = async () => {
   const t = await undoCall(cid);
-  toast(t ? 'Undone 已撤回 ' + t.label + '（返回等候）' : 'Nothing to undo 無可撤回');
+  toast(t ? 'Undone 已撤回 ' + t.label + '（返回等候 Returned to queue）' : 'Nothing to undo 無可撤回');
 };
 $('btnStop').onclick = async () => { await stopCall(cid); toast('Stopped 已停止本櫃位廣播'); };
 
-/* 暫停/恢復服務 */
+/* 暫停／恢復服務 Pause / resume service */
 $('btnPause').onclick = async () => {
   if (isCounterPaused(cid)) {
     await resumeCounter(cid);
@@ -111,7 +116,7 @@ $('keypad').onclick = e => {
 $('btnGo').onclick = async () => {
   const v = $('numInput').value.trim(); if (!v) return;
   const t = await callNumber(cid, v);
-  toast(t ? 'Called 已叫 ' + t.label : 'Not found 搵唔到該籌號');
+  toast(t ? 'Called 已叫 ' + t.label : 'Not found 找不到該籌號');
   if (t){ $('numInput').value = ''; $('keypadCard').style.display = 'none'; }
 };
 </script>
