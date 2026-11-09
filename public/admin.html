@@ -346,7 +346,7 @@ $('btnQList').onclick = async () => {
   const w = waiting();
   if(!w.length) return toast('目前無人等候 No one waiting');
   if (!confirm('確定要列印等候名單嗎？\nPrint waiting list?')) return;
-  await stateRef.child('printQueue').push({ type:'waitlist', items:w.map(t=>t.label), session:STATE.session.prefix, createdAt:Date.now(), done:false });
+  await stateRef.child('printQueue').push({ type:'waitlist', items:w.map(t=>({ l:t.label, t:(t.time||'').slice(11,16) })), session:STATE.session.prefix, createdAt:Date.now(), done:false });
   toast('已傳送名單列印 List sent');
 };
 
