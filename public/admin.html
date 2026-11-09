@@ -324,6 +324,7 @@ $('btnFreePrint').onclick = async () => {
 /* ===== 常規操作 Quick actions ===== */
 $('btnQTest').onclick = async () => {
   if (!guard()) return;
+  if (!confirm('確定要傳送測試列印嗎？\nSend test print?')) return;
   await stateRef.child('printQueue').push({ type:'free', text:'TEST 測試列印\n'+nowLabel(), image:null, copies:1, createdAt:Date.now(), done:false });
   toast('已傳送測試列印 Test sent');
 };
@@ -332,6 +333,7 @@ $('btnQLast').onclick = async () => {
   const ts = ticketsArr().sort((a,b)=>b.no-a.no);
   if(!ts.length) return toast('暫無籌號 No tickets');
   const t = ts[0];
+  if (!confirm(`確定要重印最後籌號 ${t.label} 嗎？\nReprint last ticket ${t.label}?`)) return;
   await stateRef.child('printQueue').push({ label:t.label, no:t.no, time:t.time, session:STATE.session.prefix, reprint:true, createdAt:Date.now(), done:false });
   toast('已傳送重印 Reprint sent: '+t.label);
 };
@@ -339,6 +341,7 @@ $('btnQList').onclick = async () => {
   if (!guard()) return;
   const w = waiting();
   if(!w.length) return toast('目前無人等候 No one waiting');
+  if (!confirm('確定要列印等候名單嗎？\nPrint waiting list?')) return;
   const lines = ['等候名單 Waiting List','時段 Session '+STATE.session.prefix,'------------------'].concat(w.map(t=>t.label));
   await stateRef.child('printQueue').push({ type:'free', text:lines.join('\n'), image:null, copies:1, createdAt:Date.now(), done:false });
   toast('已傳送名單列印 List sent');
