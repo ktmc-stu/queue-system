@@ -184,3 +184,29 @@ async function clearTickets(){ await stateRef.update({ tickets: null, lastCall: 
 async function pauseCounter(id){ await stateRef.child('counters/' + id + '/paused').set(true); }
 async function resumeCounter(id){ await stateRef.child('counters/' + id + '/paused').set(false); }
 function isCounterPaused(id){ return !!(STATE && STATE.counters && STATE.counters[id] && STATE.counters[id].paused); }
+
+/* ===== 登出按鈕（自動注入所有頁面） Logout button (auto-injected on all pages) ===== */
+function confirmLogout(){
+  if (confirm('確定要登出此裝置嗎？\nLog out this device?')){
+    logout();
+  }
+}
+(function injectLogoutButton(){
+  const make = () => {
+    if (document.getElementById('btnLogout')) return;
+    const btn = document.createElement('button');
+    btn.id = 'btnLogout';
+    btn.type = 'button';
+    btn.textContent = '登出 Logout';
+    btn.style.cssText = 'margin-left:10px;background:#dc2626;color:#ffffff;border:0;border-radius:8px;padding:8px 16px;font-size:14px;font-weight:800;cursor:pointer;flex:none;';
+    btn.onclick = confirmLogout;
+    const bar = document.querySelector('.topbar') || document.querySelector('.display-header');
+    if (bar){ bar.appendChild(btn); }
+    else {
+      btn.style.cssText += 'position:fixed;top:12px;right:12px;z-index:9998;';
+      document.body.appendChild(btn);
+    }
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', make);
+  else make();
+})();
