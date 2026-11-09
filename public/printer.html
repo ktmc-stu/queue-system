@@ -9,24 +9,21 @@
 .log{background:#0b1220;color:#4ade80;font-family:ui-monospace,monospace;font-size:14px;border-radius:12px;padding:12px;height:280px;overflow:auto}
 .log div{padding:2px 0;border-bottom:1px solid #1e293b}
 
-/* 列印：號碼票完全沿用 style.css 原始設計，此處只加入自由列印樣式
-   Print: reuse style.css ticket design as-is; only free-print styles added here */
+/* 列印：號碼票完全沿用 style.css 原始設計，此處只加入自由列印與名單樣式 */
 #printArea{display:none}
 @media print{
   body *{visibility:hidden}
   #printArea,#printArea *{visibility:visible}
   #printArea{display:block;position:absolute;left:0;top:0}
-  /* 號碼票安全邊距：避免左側被打印機硬體邊界裁剪
-     Ticket safe margins: prevent left-edge clipping by printer hardware margin */
+  /* 號碼票安全邊距 */
   #printArea:not(.f-free){width:80mm !important;padding:0 4mm !important;box-sizing:border-box !important}
   #printArea.p58:not(.f-free){width:58mm !important;padding:0 3mm !important;box-sizing:border-box !important}
-  /* 自由列印 Free print：80mm 寬、兩邊留白 4mm、固定字級、自動換行
-     80mm wide, 4mm side margins, fixed font size, auto word-wrap */
+  /* 自由列印 */
   #printArea.f-free{width:80mm !important}
   #printArea.f-free .f-wrap{width:100%;padding:0 4mm;box-sizing:border-box;margin:0 auto;text-align:center}
   #printArea.f-free .f-img{width:100%;height:auto;display:block;margin:0 auto}
   #printArea.f-free .f-text{font-family:"Noto Sans TC","PingFang HK","Microsoft JhengHei",sans-serif;font-size:16px !important;line-height:1.7;text-align:left;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;margin-top:6px}
-  /* 等候名單表格 Waiting list table */
+  /* 等候名單表格 */
   #printArea.f-free .f-title{font-size:18px;font-weight:800;text-align:center}
   #printArea.f-free .f-sub{font-size:12px;text-align:center;margin:2px 0 6px}
   #printArea.f-free .w-table{width:100%;border-collapse:collapse}
@@ -80,6 +77,15 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="js/common.js"></script>
 <script>
+/* 🟢 終極防休眠 Hack：使用 Web Worker 打破 Chrome 背景 1 分鐘節流限制 */
+(function keepAlive() {
+  const code = `setInterval(()=>postMessage(1), 500);`;
+  const blob = new Blob([code], {type:'application/javascript'});
+  const w = new Worker(URL.createObjectURL(blob));
+  w.onmessage = () => {};
+  console.log('🔊 Web Worker 防休眠已啟動');
+})();
+
 bindLoginForm(false);
 if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
 
@@ -154,8 +160,6 @@ function freeHTML(j){
   return h + '</div>';
 }
 
-/* ===== 等候名單表格（每行 4 個＋取號時間＋列印時間）
-   Waiting list table (4 per row, with ticket time & print time) ===== */
 function listHTML(j){
   const cols = 4;
   const items = j.items || [];
@@ -190,6 +194,6 @@ $('btnClearQueue').onclick = async () => {
   await stateRef.child('printQueue').remove();
   jobs.length = 0; updateCount(); log('隊列已清空 Queue cleared');
 };
-log('系統就緒 System ready');
+log('系統就緒 System ready (Anti-Sleep Mode)');
 </script>
 </body></html>
