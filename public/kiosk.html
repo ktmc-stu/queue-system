@@ -78,7 +78,7 @@
     <div class="k-stat"><small>Ahead 前方人數 Persons</small><span id="tvAhead">0</span></div>
     <div class="k-stat"><small>Est. wait 預計等候（分鐘 Minutes）</small><span id="tvEst">—</span></div>
   </div>
-  <div class="k-note">Please keep this ticket and watch for the display announcement. 請保留此籌號，並留意顯示屏廣播。</div>
+  <div class="k-note">Please keep this ticket and watch for the display announcement. 請保留此籌號，並留意顯示屏廣播。憑條將於打印機處自動印出。 Your slip will be printed automatically at the printer station.</div>
   <div class="k-back" id="backCount"></div>
 </div>
 
@@ -128,22 +128,18 @@
   </div>
 </div>
 
-<div id="printArea"></div>
 <div id="toast" class="toast"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="js/common.js"></script>
 <script>
-/* 啟動操作密碼驗證 Enable operation password check */
 bindLoginForm(false);
 if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
 
 const $ = id => document.getElementById(id);
 let busy = false, backTimer = null, takenNo = null, shownAt = 0, rpTicket = null;
 
-/* 點擊／觸碰任何位置 → 返回首頁（僅限取號票畫面）
-   Tap anywhere → return to home (ticket view only) */
 document.addEventListener('pointerdown', () => {
   if (takenNo != null && Date.now() - shownAt > 1500) goHome();
 });
@@ -168,41 +164,19 @@ onState(s => {
   }
 });
 
-/* ===== 憑條模板 Ticket template ===== */
-function ticketHTML(t, reprint){
-  return `
-    ${reprint ? '<div class="t-reprint">Reprinted 重新列印</div>' : ''}
-    <div class="t-head">
-      <img src="img/logo.png" alt="logo">
-      <div>
-        <div class="t-school-zh">觀塘瑪利諾書院</div>
-        <div class="t-school-en">KWUN TONG MARYKNOLL COLLEGE</div>
-      </div>
-    </div>
-    <div class="t-center">
-      <div class="t-title">號碼票</div>
-      <div class="t-title-en">QUEUE TICKET</div>
-      <div class="t-num">${t.label}</div>
-      <div class="t-row">發行時間 Issuing Time: ${t.time}</div>
-      ${reprint ? `<div class="t-row">重印時間 Reprint Time: ${nowLabel()}</div>` : ''}
-      <div class="t-row">時段 Session: ${STATE.session.prefix}</div>
-    </div>
-    <div class="t-note">
-      請妥善保管此籌號，並留意顯示屏及廣播。<br>
-      Please keep this ticket and wait for your turn.<br>
-      若連續叫號3次後仍未到場，籌號將作廢。<br>
-      Your ticket will be canceled after three missed calls.<br>
-      如不慎過號，請重新取號輪候。<br>
-      Please get a new ticket if you missed your turn.
-    </div>`;
-}
-
-/* 按紙張設定列印 Print according to the paper setting */
-function setPrint(t, reprint){
-  const pa = $('printArea');
-  pa.className = (STATE.settings.paper === '58') ? 'p58' : '';
-  pa.innerHTML = ticketHTML(t, reprint);
-  setTimeout(() => window.print(), 300);
+/* ===== 遙控列印：將指令寫入 Firebase 隊列，由 printer.html 自動列印
+   Remote print: push a job to the Firebase queue; printer.html prints it automatically ===== */
+function remotePrint(t, reprint){
+  stateRef.child('printQueue').push({
+    label: t.label,
+    no: t.no,
+    time: t.time || nowLabel(),
+    session: STATE.session.prefix,
+    reprint: !!reprint,
+    createdAt: Date.now(),
+    done: false
+  }).then(() => toast('️ 已傳送列印指令 Print job sent'))
+    .catch(() => toast('⚠️ 列印指令傳送失敗 Print job failed'));
 }
 
 /* ===== 取號 Take a ticket ===== */
@@ -217,7 +191,7 @@ $('takeBtn').onclick = async () => {
   $('homeView').style.display = 'none';
   $('ticketView').style.display = 'flex';
 
-  setPrint(t, false);
+  remotePrint(t, false);   // 遙控列印 Remote print
 
   let sec = 10;
   $('backCount').textContent = `Tap anywhere to return 點擊任何位置返回 · ${sec} 秒 s`;
@@ -302,7 +276,6 @@ function renderRpList(){
   ).join('') || '<p class="muted">No tickets 暫無籌號</p>';
 }
 
-/* 選擇號碼 → 預覽 Select a number → preview */
 $('rpItems').onclick = e => {
   const k = e.target.dataset.k; if (!k) return;
   const t = ticketsArr().find(x => x.key === k); if (!t) return;
@@ -322,10 +295,11 @@ $('rpItems').onclick = e => {
   $('rpPreview').style.display = 'block';
 };
 
-/* 確認後列印 Print after confirmation */
 $('rpPrint').onclick = () => {
   if (!rpTicket) return;
-  setPrint(rpTicket, true);
+  remotePrint(rpTicket, true);   // 遙控重印 Remote reprint
+  $('rpPreview').style.display = 'none';
+  $('rpList').style.display = 'block';
 };
 </script>
 </body></html>
