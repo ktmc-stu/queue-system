@@ -16,6 +16,10 @@
   body *{visibility:hidden}
   #printArea,#printArea *{visibility:visible}
   #printArea{display:block;position:absolute;left:0;top:0}
+  /* 號碼票安全邊距：避免左側被打印機硬體邊界裁剪
+     Ticket safe margins: prevent left-edge clipping by printer hardware margin */
+  #printArea:not(.f-free){width:80mm !important;padding:0 4mm !important;box-sizing:border-box !important}
+  #printArea.p58:not(.f-free){width:58mm !important;padding:0 3mm !important;box-sizing:border-box !important}
   /* 自由列印 Free print：80mm 寬、兩邊留白 4mm、固定字級、自動換行
      80mm wide, 4mm side margins, fixed font size, auto word-wrap */
   #printArea.f-free{width:80mm !important}
