@@ -22,6 +22,11 @@
   #printArea.f-free .f-wrap{width:100%;padding:0 4mm;box-sizing:border-box;margin:0 auto;text-align:center}
   #printArea.f-free .f-img{width:100%;height:auto;display:block;margin:0 auto}
   #printArea.f-free .f-text{font-family:"Noto Sans TC","PingFang HK","Microsoft JhengHei",sans-serif;font-size:16px !important;line-height:1.7;text-align:left;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;margin-top:6px}
+  /* 等候名單表格 Waiting list table */
+  #printArea.f-free .f-title{font-size:18px;font-weight:800;text-align:center}
+  #printArea.f-free .f-sub{font-size:12px;text-align:center;margin:2px 0 6px}
+  #printArea.f-free .w-table{width:100%;border-collapse:collapse}
+  #printArea.f-free .w-table td{border:1px solid #000;padding:4px 2px;text-align:center;font-size:14px;font-family:ui-monospace,monospace}
 }
 </style>
 </head><body>
@@ -93,7 +98,7 @@ function enqueue(key, j){
   seen[key] = 1;
   jobs.push(Object.assign({ key: key }, j));
   updateCount();
-  log(`收到指令 Job: ${j.type==='free' ? '自由列印 Free' : j.label}${j.reprint?'（重印 Reprint）':''}`);
+  log(`收到指令 Job: ${j.type==='free' ? '自由列印 Free' : (j.type==='waitlist' ? '等候名單 Waiting List' : j.label)}${j.reprint?'（重印 Reprint）':''}`);
   processJobs();
 }
 stateRef.child('printQueue').on('child_added', snap => { const j=snap.val(); if(!j||j.done) return; enqueue(snap.key,j); });
@@ -140,10 +145,26 @@ function freeHTML(j){
   return h + '</div>';
 }
 
+/* ===== 等候名單表格（每行 4 個，節省紙張） Waiting list table (4 per row, saves paper) ===== */
+function listHTML(j){
+  const cols = 4;
+  const items = j.items || [];
+  let rows = '';
+  for (let i=0;i<items.length;i+=cols){
+    rows += '<tr>' + items.slice(i,i+cols).map(x=>`<td>${escapeHtml(x)}</td>`).join('') + '</tr>';
+  }
+  return `<div class="f-wrap">
+    <div class="f-title">等候名單 Waiting List</div>
+    <div class="f-sub">時段 Session ${escapeHtml(j.session||'')} ・ 共 ${items.length} 位 Total</div>
+    <table class="w-table">${rows}</table>
+  </div>`;
+}
+
 function printJob(j){
   const pa = $('printArea');
-  pa.className = (j.type === 'free') ? 'f-free' : ((STATE && STATE.settings.paper === '58') ? 'p58' : '');
-  pa.innerHTML = (j.type === 'free') ? freeHTML(j) : ticketHTML(j);
+  const isFree = (j.type === 'free' || j.type === 'waitlist');
+  pa.className = isFree ? 'f-free' : ((STATE && STATE.settings.paper === '58') ? 'p58' : '');
+  pa.innerHTML = isFree ? ((j.type === 'waitlist') ? listHTML(j) : freeHTML(j)) : ticketHTML(j);
   const copies = Math.max(1, j.copies || 1);
   setTimeout(() => {
     for (let i=0;i<copies;i++) window.print();
