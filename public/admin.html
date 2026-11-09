@@ -73,6 +73,8 @@
     <label>Title 標題</label><input id="setTitle">
     <label>Subtitle 副標題</label><input id="setSubtitle">
     <label>Note 提示</label><input id="setNote">
+    <label>Ticket Note 憑條底部提示語（每行一句）</label>
+    <textarea id="setTicketNote" rows="6" style="width:100%"></textarea>
   </div>
 
   <div class="card">
@@ -153,6 +155,7 @@ bindLoginForm(true);
 if (!KTMC_ADMIN_AUTHED) { window.onAfterLogin = () => location.reload(); }
 
 const $ = id => document.getElementById(id);
+const DEFAULT_TICKET_NOTE = '請妥善保管此籌號，並留意顯示屏及廣播。\nPlease keep this ticket and wait for your turn.\n若連續叫號3次後仍未到場，籌號將作廢。\nYour ticket will be canceled after three missed calls.\n如不慎過號，請重新取號輪候。\nPlease get a new ticket if you missed your turn.';
 let loaded = false;
 function counters(){ return (STATE && STATE.settings && STATE.settings.counters) || []; }
 function guard(){ if (!STATE){ toast('⚠️ 資料未載入 Data not loaded'); return false; } return true; }
@@ -182,6 +185,7 @@ onState(s => {
     $('setTitle').value = s.settings.title;
     $('setSubtitle').value = s.settings.subtitle;
     $('setNote').value = s.settings.note;
+    $('setTicketNote').value = s.settings.ticketNote || DEFAULT_TICKET_NOTE;
     $('avgMinutes').value = s.settings.avgMinutes || 3;
     $('paper58').checked = s.settings.paper === '58';
     $('paper80').checked = s.settings.paper !== '58';
@@ -382,6 +386,7 @@ $('btnSave').onclick = async () => {
     title: $('setTitle').value,
     subtitle: $('setSubtitle').value,
     note: $('setNote').value,
+    ticketNote: $('setTicketNote').value,
     counters: counters(),
     avgMinutes: +$('avgMinutes').value || 3,
     paper: $('paper58').checked ? '58' : '80',
