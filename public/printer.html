@@ -1,0 +1,161 @@
+<!doctype html><html lang="zh-HK"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Printer 遙控列印端</title><link rel="stylesheet" href="css/style.css">
+<style>
+.pr-wrap{max-width:900px;margin:20px auto;padding:0 16px;display:grid;gap:16px}
+.pr-status{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700}
+.dot{width:14px;height:14px;border-radius:50%;background:#ef4444;flex:none}
+.dot.on{background:#22c55e;box-shadow:0 0 8px #22c55e}
+.log{background:#0f172a;color:#4ade80;font-family:ui-monospace,monospace;font-size:13px;border-radius:12px;padding:12px;height:280px;overflow:auto}
+.log div{padding:2px 0;border-bottom:1px solid #1e293b}
+#printArea{display:none}
+@media print{
+  body *{visibility:hidden}
+  #printArea,#printArea *{visibility:visible}
+  #printArea{display:block;position:absolute;left:0;top:0}
+}
+</style>
+</head><body>
+<div id="ktmcLogin" style="position:fixed; inset:0; background:linear-gradient(180deg,#f8fafc,#eef2f7); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px">
+  <div class="card" style="max-width:400px; width:100%; text-align:center">
+    <h3 style="border:none; padding:0; font-size:24px; margin-bottom:8px" id="ktmcLoginTitle">🔒 Login Required 需要登入</h3>
+    <p style="margin:0 0 4px" id="ktmcLoginDesc">請輸入密碼</p>
+    <p class="muted" style="margin:0 0 16px; font-size:13px" id="ktmcLoginDescEn">Enter the password to continue</p>
+    <input type="password" id="ktmcLoginPw" placeholder="Password 密碼" style="width:100%; text-align:center; font-size:18px; padding:14px">
+    <button id="ktmcLoginBtn" style="width:100%; margin-top:14px; font-size:16px; padding:14px">登入 Login</button>
+    <p id="ktmcLoginErr" style="margin-top:12px; color:#dc2626; font-weight:600; min-height:20px"></p>
+  </div>
+</div>
+
+<div class="topbar"><span>Printer 遙控列印端</span><span class="chip" id="sessChip"></span></div>
+<div class="pr-wrap">
+  <div class="card">
+    <div class="pr-status">
+      <span class="dot" id="dot"></span>
+      <span id="statusText">等待連線 Connecting…</span>
+    </div>
+    <p class="muted" style="margin:8px 0 0">此電腦需保持開啟並連接熱敏打印機。iPad 或取號端取號後，此處會自動列印。<br>
+    Keep this PC on with the thermal printer connected. Tickets taken on the iPad will print here automatically.</p>
+    <div class="row" style="margin-top:12px">
+      <span class="chip" id="paperChip">Paper 紙張：—</span>
+      <span class="chip" id="countChip">Queue 隊列：0</span>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button id="btnTest" class="btn-amber">Test Print 測試列印</button>
+      <button id="btnClearQueue" class="btn-gray">Clear Queue 清空列印隊列</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Print Log 列印記錄</h3>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<div id="printArea"></div>
+<div id="toast" class="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/common.js"></script>
+<script>
+bindLoginForm(false);
+if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
+
+const $ = id => document.getElementById(id);
+const jobs = [];
+let printing = false;
+
+function log(msg){
+  const box = $('log');
+  const div = document.createElement('div');
+  div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  box.prepend(div);
+}
+
+onState(s => {
+  $('dot').classList.add('on');
+  $('statusText').textContent = '已連線，監控列印隊列中 Online & watching print queue';
+  $('sessChip').textContent = 'Session 時段 ' + s.session.prefix;
+  $('paperChip').textContent = 'Paper 紙張：' + ((s.settings.paper === '58') ? '58mm' : '80mm');
+});
+
+/* ===== 監聽列印隊列 Watch the print queue ===== */
+stateRef.child('printQueue').on('child_added', snap => {
+  const j = snap.val();
+  if (!j || j.done) return;
+  jobs.push(Object.assign({ key: snap.key }, j));
+  $('countChip').textContent = 'Queue 隊列：' + jobs.length;
+  log(`收到列印指令 Job received: ${j.label}${j.reprint ? '（重印 Reprint）' : ''}`);
+  processJobs();
+});
+
+async function processJobs(){
+  if (printing) return;
+  printing = true;
+  while (jobs.length){
+    const j = jobs.shift();
+    $('countChip').textContent = 'Queue 隊列：' + jobs.length;
+    // 先標記完成，避免重複列印 Mark done first to avoid double printing
+    await stateRef.child('printQueue/' + j.key).update({ done: true, printedAt: Date.now() }).catch(()=>{});
+    printJob(j);
+    await new Promise(r => setTimeout(r, 900));
+  }
+  printing = false;
+}
+
+/* ===== 憑條模板（與原取號頁完全相同 Same template as original kiosk） ===== */
+function ticketHTML(j){
+  return `
+    ${j.reprint ? '<div class="t-reprint">Reprinted 重新列印</div>' : ''}
+    <div class="t-head">
+      <img src="img/logo.png" alt="logo">
+      <div>
+        <div class="t-school-zh">觀塘瑪利諾書院</div>
+        <div class="t-school-en">KWUN TONG MARYKNOLL COLLEGE</div>
+      </div>
+    </div>
+    <div class="t-center">
+      <div class="t-title">號碼票</div>
+      <div class="t-title-en">QUEUE TICKET</div>
+      <div class="t-num">${j.label}</div>
+      <div class="t-row">發行時間 Issuing Time: ${j.time}</div>
+      ${j.reprint ? `<div class="t-row">重印時間 Reprint Time: ${nowLabel()}</div>` : ''}
+      <div class="t-row">時段 Session: ${j.session}</div>
+    </div>
+    <div class="t-note">
+      請妥善保管此籌號，並留意顯示屏及廣播。<br>
+      Please keep this ticket and wait for your turn.<br>
+      若連續叫號3次後仍未到場，籌號將作廢。<br>
+      Your ticket will be canceled after three missed calls.<br>
+      如不慎過號，請重新取號輪候。<br>
+      Please get a new ticket if you missed your turn.
+    </div>`;
+}
+
+function printJob(j){
+  const pa = $('printArea');
+  pa.className = (STATE && STATE.settings.paper === '58') ? 'p58' : '';
+  pa.innerHTML = ticketHTML(j);
+  setTimeout(() => {
+    window.print();
+    log(`✅ ${j.label} 已發送打印機 Sent to printer`);
+  }, 250);
+}
+
+/* ===== 測試列印 Test print ===== */
+$('btnTest').onclick = () => {
+  printJob({ label: 'TEST', time: nowLabel(), session: (STATE ? STATE.session.prefix : 'A'), reprint: false });
+};
+
+/* ===== 清空隊列 Clear queue ===== */
+$('btnClearQueue').onclick = async () => {
+  if (!confirm('清空所有列印隊列記錄？\nClear all print queue records?')) return;
+  await stateRef.child('printQueue').remove();
+  jobs.length = 0;
+  $('countChip').textContent = 'Queue 隊列：0';
+  log('隊列已清空 Queue cleared');
+};
+
+log('系統就緒 System ready');
+</script>
+</body></html>
