@@ -241,5 +241,64 @@ $('avgMinutes').addEventListener('change', async function(){
   await saveSettings({ ...STATE.settings, counters: counters(), avgMinutes: +this.value || 3 });
   toast('已儲存平均時間');
 });
+/* ===== 自由列印 Free Print ===== */
+let freeImageData = null;
+function resizeImage(file, maxW, cb){
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxW){ h = Math.round(h*maxW/w); w = maxW; }
+      const c = document.createElement('canvas'); c.width=w; c.height=h;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h);
+      ctx.drawImage(img,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',0.85));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+$('freeImage').addEventListener('change', function(){
+  const f = this.files[0]; if(!f) return;
+  const maxW = (STATE && STATE.settings.paper==='58') ? 384 : 576;
+  resizeImage(f, maxW, data => {
+    freeImageData = data;
+    const pv = $('freeImgPreview'); pv.src = data; pv.style.display='block';
+    toast('圖片已載入 Image loaded');
+  });
+});
+$('btnClearImg').onclick = () => { freeImageData=null; $('freeImage').value=''; $('freeImgPreview').style.display='none'; };
+$('btnFreePrint').onclick = async () => {
+  if (!guard()) return;
+  const text = $('freeText').value.trim();
+  if (!text && !freeImageData) return toast('請輸入文字或選擇圖片 Please add text or image');
+  const copies = Math.max(1, Math.min(10, +$('freeCopies').value||1));
+  await stateRef.child('printQueue').push({ type:'free', text, image:freeImageData, copies, createdAt:Date.now(), done:false });
+  toast('已傳送列印指令 Print job sent');
+};
+/* 常規操作 Quick actions */
+$('btnQTest').onclick = async () => {
+  if (!guard()) return;
+  await stateRef.child('printQueue').push({ type:'free', text:'TEST 測試列印\n'+nowLabel(), image:null, copies:1, createdAt:Date.now(), done:false });
+  toast('已傳送測試列印 Test sent');
+};
+$('btnQLast').onclick = async () => {
+  if (!guard()) return;
+  const ts = ticketsArr().sort((a,b)=>b.no-a.no);
+  if(!ts.length) return toast('暫無籌號 No tickets');
+  const t = ts[0];
+  await stateRef.child('printQueue').push({ label:t.label, no:t.no, time:t.time, session:STATE.session.prefix, reprint:true, createdAt:Date.now(), done:false });
+  toast('已傳送重印 Reprint sent: '+t.label);
+};
+$('btnQList').onclick = async () => {
+  if (!guard()) return;
+  const w = waiting();
+  if(!w.length) return toast('目前無人等候 No one waiting');
+  const lines = ['等候名單 Waiting List','時段 Session '+STATE.session.prefix,'------------------'].concat(w.map(t=>t.label));
+  await stateRef.child('printQueue').push({ type:'free', text:lines.join('\n'), image:null, copies:1, createdAt:Date.now(), done:false });
+  toast('已傳送名單列印 List sent');
+};
 </script>
 </body></html>
