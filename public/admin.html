@@ -315,6 +315,7 @@ $('btnFreePrint').onclick = async () => {
   if (!guard()) return;
   const text = $('freeText').value.trim();
   if (!text && !freeImageData) return toast('請輸入文字或選擇圖片 Please add text or image');
+  if (!confirm('確定要傳送此自由列印指令嗎？\nSend this free print job?')) return;
   const copies = Math.max(1, Math.min(10, +$('freeCopies').value||1));
   await stateRef.child('printQueue').push({ type:'free', text, image:freeImageData, copies, createdAt:Date.now(), done:false });
   toast('已傳送列印指令 Print job sent');
