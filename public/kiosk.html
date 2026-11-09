@@ -297,6 +297,7 @@ $('rpItems').onclick = e => {
 
 $('rpPrint').onclick = () => {
   if (!rpTicket) return;
+  if (!confirm(`確定要重印 ${rpTicket.label} 嗎？\nReprint ${rpTicket.label}?`)) return;
   remotePrint(rpTicket, true);   // 遙控重印 Remote reprint
   $('rpPreview').style.display = 'none';
   $('rpList').style.display = 'block';
