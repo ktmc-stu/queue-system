@@ -31,6 +31,7 @@
   #printArea.f-free .f-sub{font-size:12px;text-align:center;margin:2px 0 6px}
   #printArea.f-free .w-table{width:100%;border-collapse:collapse}
   #printArea.f-free .w-table td{border:1px solid #000;padding:4px 2px;text-align:center;font-size:14px;font-family:ui-monospace,monospace}
+  #printArea.f-free .w-table .wt{font-size:10px;margin-top:1px}
 }
 </style>
 </head><body>
@@ -153,21 +154,24 @@ function freeHTML(j){
   return h + '</div>';
 }
 
-/* ===== 等候名單表格（每行 4 個，節省紙張） Waiting list table (4 per row, saves paper) ===== */
+/* ===== 等候名單表格（每行 4 個＋取號時間＋列印時間）
+   Waiting list table (4 per row, with ticket time & print time) ===== */
 function listHTML(j){
   const cols = 4;
   const items = j.items || [];
   let rows = '';
   for (let i=0;i<items.length;i+=cols){
-    rows += '<tr>' + items.slice(i,i+cols).map(x=>`<td>${escapeHtml(x)}</td>`).join('') + '</tr>';
+    rows += '<tr>' + items.slice(i,i+cols).map(x=>{
+      if (typeof x === 'string') return `<td>${escapeHtml(x)}</td>`;
+      return `<td>${escapeHtml(x.l)}${x.t ? `<div class="wt">${escapeHtml(x.t)}</div>` : ''}</td>`;
+    }).join('') + '</tr>';
   }
   return `<div class="f-wrap">
     <div class="f-title">等候名單 Waiting List</div>
-    <div class="f-sub">時段 Session ${escapeHtml(j.session||'')} ・ 共 ${items.length} 位 Total</div>
+    <div class="f-sub">時段 Session ${escapeHtml(j.session||'')} ・ 共 ${items.length} 位 Total<br>列印時間 Print Time：${nowLabel()}</div>
     <table class="w-table">${rows}</table>
   </div>`;
 }
-
 function printJob(j){
   const pa = $('printArea');
   const isFree = (j.type === 'free' || j.type === 'waitlist');
