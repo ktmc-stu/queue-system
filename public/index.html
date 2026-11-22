@@ -1,55 +1,168 @@
-<!doctype html><html lang="zh-HK"><head>
+<!doctype html><html lang="zh-Hant-HK"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Queue System 排隊系統</title><link rel="stylesheet" href="css/style.css">
-</head><body>
-<div id="ktmcLogin" style="position:fixed; inset:0; background:linear-gradient(180deg,#f8fafc,#eef2f7); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px">
-  <div class="card" style="max-width:400px; width:100%; text-align:center">
-    <h3 style="border:none; padding:0; font-size:24px; margin-bottom:8px" id="ktmcLoginTitle">🔒 Login Required 需要登入</h3>
-    <p style="margin:0 0 4px" id="ktmcLoginDesc">請輸入密碼</p>
-    <p class="muted" style="margin:0 0 16px; font-size:13px" id="ktmcLoginDescEn">Enter the password to continue</p>
-    <input type="password" id="ktmcLoginPw" placeholder="Password 密碼" style="width:100%; text-align:center; font-size:18px; padding:14px">
-    <button id="ktmcLoginBtn" style="width:100%; margin-top:14px; font-size:16px; padding:14px">登入 Login</button>
-    <p id="ktmcLoginErr" style="margin-top:12px; color:#dc2626; font-weight:600; min-height:20px"></p>
-  </div>
-</div>
-<div class="topbar"><span>KTMC Queue System 排隊系統</span><span class="chip">Live 即時</span></div>
-<div class="admin-wrap">
-  <div class="card center" style="text-align:center">
-    <h3 style="border:none; padding:0; font-size:24px">Welcome 歡迎使用</h3>
-    <p class="muted">Choose a station 選擇終端</p>
-  </div>
-  <div class="btn-grid">
-    <a href="kiosk.html"><button style="width:100%">REMOTE KIOSK<br><span class="hk">遙距取號機</span></button></a>
-    <a href="printer.html"><button class="btn-red" style="width:100%">PRINTER<br><span class="hk">列印機</span></button></a>
-    <a href="display.html"><button class="btn-green" style="width:100%">DISPLAY<br><span class="hk">顯示屏</span></button></a>
-    <button id="btnCounters" class="btn-amber" style="width:100%">COUNTER<br><span class="hk">櫃位選擇</span></button>
-    <a href="admin.html"><button class="btn-gray" style="width:100%">ADMIN<br><span class="hk">管理</span></button></a>
-  </div>
-  <div class="card" id="counterPick" style="display:none">
-    <h3>Choose Counter 選擇櫃位</h3>
-    <div class="btn-grid" id="counterList"></div>
-  </div>
-</div>
-<div id="toast" class="toast"></div>
+<title>KTMC Queue · 排隊叫號系統</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/lang.css">
+<style>
+:root{--pnav:60px}
+html{scroll-padding-top:calc(var(--pnav) + 18px)}
+.portal-nav{position:fixed;top:0;left:0;right:0;height:var(--pnav);z-index:900;display:flex;align-items:center;gap:14px;padding:0 clamp(14px,4vw,40px);background:rgba(255,255,255,.96);border-bottom:1px solid transparent;transition:.2s}
+.portal-nav.scrolled{border-bottom-color:var(--line);box-shadow:0 6px 20px rgba(15,35,64,.07)}
+.portal-nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;min-width:0}
+.portal-nav .mark{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--ac);color:#fff;flex:none}
+.portal-nav .mark svg{width:15px;height:15px}
+.portal-nav small{display:block;font-size:10.5px;font-weight:400;color:var(--faint);letter-spacing:.04em}
+.navlinks{display:flex;gap:2px;margin-left:auto}
+.navlinks a{padding:8px 12px;font-size:13.5px;font-weight:500;color:var(--muted)}
+.navlinks a:hover{color:var(--text);text-decoration:none}
+.navlinks a.on{color:var(--acd);text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:1px}
+.portal-nav .right{display:flex;align-items:center;gap:8px;flex:none}
+.clock{font:12px var(--mono);color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 10px}
+.portal{max-width:1140px;margin:0 auto;padding:calc(var(--pnav) + 44px) clamp(14px,4vw,40px) 64px}
+.portal section{margin-bottom:70px}
+.portal h1{font-size:clamp(32px,5vw,50px);line-height:1.1;letter-spacing:-.025em;margin:14px 0}
+.portal h1 .accent{color:var(--ac)}
+.portal h2{font-size:clamp(21px,2.6vw,27px);margin:6px 0}
+.lede{color:var(--muted);font-size:15px;max-width:640px;margin:0}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.hero{display:grid;grid-template-columns:1.2fr .9fr;gap:38px;align-items:center}
+.hero-cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);margin-top:30px;border-top:1px solid var(--line)}
+.stat{padding:15px 16px 4px;border-left:1px solid var(--line)}
+.stat:first-child{border-left:0;padding-left:0}
+.stat .n{font:500 25px var(--mono);font-variant-numeric:tabular-nums}
+.stat.ac .n{color:var(--ac)}.stat.ok .n{color:var(--ok)}
+.stat .l{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin-top:2px}
+.hero-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh2);padding:24px}
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tagline{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.call-preview{background:#0b1220;border-radius:12px;padding:20px;margin:18px 0 12px;text-align:center;color:#f8fafc}
+.call-preview .cp-l{font-size:10.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#8fa3c8}
+.call-preview .cp-n{font:700 56px/1.1 var(--mono);color:#fbbf24;margin:6px 0 2px}
+.call-preview .cp-c{font-size:14px;color:#aecbfa;font-weight:600}
+.wchips{display:flex;gap:6px;flex-wrap:wrap}
+.wchips span{font:600 12px var(--mono);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px 8px;color:var(--ink2)}
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(276px,1fr));gap:14px}
+.station{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;transition:.15s}
+.station:hover{border-color:var(--acl);box-shadow:var(--sh2)}
+.st-top{display:flex;align-items:center;gap:9px}
+.st-name{font-weight:600;font-size:15px}
+.st-token{margin-left:auto;font:11px var(--mono);color:var(--acd);background:var(--acs);border:1px solid var(--acl);padding:2px 8px;border-radius:5px}
+.st-meta{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.meta{font-size:11px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:3px 8px;border-radius:5px}
+.st-foot{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:11px}
+.empty{grid-column:1/-1;text-align:center;padding:42px 20px;border:1px dashed var(--line2);border-radius:12px;color:var(--muted)}
+.launch{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.lc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:12px;transition:.15s}
+.lc:hover{border-color:var(--acl);box-shadow:var(--sh2)}
+.lc-top{display:flex;align-items:center}
+.lc .ic{width:38px;height:38px;border:1px solid var(--acl);border-radius:9px;display:grid;place-items:center;color:var(--ac);background:var(--acs)}
+.lc .ic svg{width:18px;height:18px}
+.lc .idx{margin-left:auto;font:11px var(--mono);color:var(--faint)}
+.lc h3{margin:2px 0 0;font-size:19px;border:0;padding:0}
+.lc p{margin:0;font-size:13.5px;color:var(--muted)}
+.lc .btn{align-self:flex-start;margin-top:auto}
+.setup{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;align-items:start}
+.steps{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 22px}
+.step{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.step .num{width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;font:500 14px var(--mono);color:var(--acd);border:1px solid var(--acl);background:var(--acs)}
+.step b{display:block;font-size:14.5px}
+.step p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.batbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;position:sticky;top:calc(var(--pnav) + 16px)}
+.batbox .hd{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.batbox .hd b{font:600 13px var(--mono)}
+.batbox .hd .sub{margin-left:auto;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.batbox pre{margin:0;font:11px/1.65 var(--mono);white-space:pre-wrap;word-break:break-all;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;max-height:250px;overflow:auto;color:var(--ink2)}
+.pfoot{border-top:1px solid var(--line);padding:22px clamp(14px,4vw,40px);display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:space-between;color:var(--muted);font-size:12.5px;max-width:1140px;margin:0 auto}
+.health{display:inline-flex;align-items:center;gap:7px;font-weight:500}
+.health i{width:8px;height:8px;border-radius:50%;background:var(--faint)}
+.health.ok i{background:var(--ok)}.health.ok{color:var(--ok)}
+.health.bad i{background:var(--bd)}.health.bad{color:var(--bd)}
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .5s var(--e),transform .5s var(--e)}
+.reveal.in{opacity:1;transform:none}
+body.auth-locked .portal-nav .right,body.auth-locked .pfoot{visibility:hidden}
+@media(max-width:940px){.hero,.launch,.setup{grid-template-columns:1fr}.batbox{position:static}.navlinks{display:none}.stats{grid-template-columns:repeat(2,1fr)}.stat:nth-child(odd){border-left:0;padding-left:0}.stat{border-top:1px solid var(--line)}.stat:nth-child(-n+2){border-top:0}}
+@media(max-width:560px){.stats{grid-template-columns:1fr}.stat{border-left:0;padding:12px 0}.stat:first-child{border-top:0}.clock{display:none}.hero-cta .btn{flex:1}}
+</style>
+</head><body class="auth-locked">
+<nav class="portal-nav" id="nav">
+  <div class="brand"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/><path d="M13 5v2M13 11v2M13 17v2"/></svg></span><span><span data-i18n="app.portal"></span><small data-i18n="app.sub"></small></span></div>
+  <div class="navlinks"><a href="#overview" class="on" data-i18n="a.overview"></a><a href="#counters" data-i18n="a.counters"></a><a href="#launch" data-i18n="po.launch"></a><a href="#setup" data-i18n="po.steps"></a></div>
+  <div class="right"><span class="clock" id="clock">--:--:--</span><a class="btn sm" href="admin.html" data-i18n="po.openAdmin"></a></div>
+</nav>
+
+<main class="portal">
+  <section id="overview" class="hero reveal">
+    <div>
+      <span class="eyebrow" data-i18n="po.eyebrow"></span>
+      <h1><span data-i18n="po.h1a"></span><br><span class="accent" data-i18n="po.h1b"></span></h1>
+      <p class="lede" data-i18n="po.lede"></p>
+      <div class="hero-cta">
+        <a class="btn" href="kiosk.html" data-i18n="app.kiosk"></a>
+        <a class="btn ghost" href="display.html" data-i18n="app.display"></a>
+        <a class="btn ghost" href="printer.html" data-i18n="app.printer"></a>
+        <a class="btn ghost" href="admin.html" data-i18n="app.admin"></a>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="n" id="stWait">0</div><div class="l" data-i18n="s.waiting"></div></div>
+        <div class="stat ac"><div class="n" id="stServ">0</div><div class="l" data-i18n="s.serving"></div></div>
+        <div class="stat"><div class="n" id="stIssued">0</div><div class="l" data-i18n="s.issued"></div></div>
+        <div class="stat ok"><div class="n" id="stOn">0/0</div><div class="l" data-i18n="s.online"></div></div>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="hero-top"><span class="tagline" data-i18n="po.preview"></span><span class="chip" id="sessChip">—</span></div>
+      <div class="call-preview"><div class="cp-l" data-i18n="po.nowCalling"></div><div class="cp-n" id="cpNum">—</div><div class="cp-c" id="cpCounter">—</div></div>
+      <div class="wchips" id="wchips"></div>
+      <p class="muted" style="margin-top:12px" data-i18n="po.previewNote"></p>
+    </div>
+  </section>
+
+  <section id="counters" class="reveal">
+    <div class="sec-head"><div><span class="eyebrow" data-i18n="po.board"></span><h2 data-i18n="po.counters"></h2><p class="lede" data-i18n="po.countersLede"></p></div><a class="btn ghost sm" href="admin.html#counters" data-i18n="po.manage"></a></div>
+    <div class="board" id="board"><div class="empty" data-i18n="po.loading"></div></div>
+  </section>
+
+  <section id="launch" class="reveal">
+    <div class="sec-head"><div><span class="eyebrow" data-i18n="po.ends"></span><h2 data-i18n="po.launch"></h2></div></div>
+    <div class="launch">
+      <div class="lc"><div class="lc-top"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/><path d="M13 5v2M13 11v2M13 17v2"/></svg></span><span class="idx">01</span></div><h3 data-i18n="app.kiosk"></h3><p data-i18n="po.kioskDesc"></p><a class="btn ghost sm" href="kiosk.html" data-i18n="c.open"></a></div>
+      <div class="lc"><div class="lc-top"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span><span class="idx">02</span></div><h3 data-i18n="app.counter"></h3><p data-i18n="po.counterDesc"></p><a class="btn ghost sm" href="#counters" data-i18n="c.open"></a></div>
+      <div class="lc"><div class="lc-top"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span><span class="idx">03</span></div><h3 data-i18n="app.display"></h3><p data-i18n="po.displayDesc"></p><a class="btn ghost sm" href="display.html" data-i18n="c.open"></a></div>
+      <div class="lc"><div class="lc-top"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></span><span class="idx">04</span></div><h3 data-i18n="app.printer"></h3><p data-i18n="po.printerDesc"></p><a class="btn ghost sm" href="printer.html" data-i18n="c.open"></a></div>
+      <div class="lc"><div class="lc-top"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="idx">05</span></div><h3 data-i18n="app.admin"></h3><p data-i18n="po.adminDesc"></p><a class="btn ghost sm" href="admin.html" data-i18n="po.openAdmin"></a></div>
+    </div>
+  </section>
+
+  <section id="setup" class="reveal">
+    <div class="sec-head"><div><span class="eyebrow" data-i18n="po.deploy"></span><h2 data-i18n="po.steps"></h2></div></div>
+    <div class="setup">
+      <div class="steps">
+        <div class="step"><span class="num">1</span><div><b data-i18n="po.s1"></b><p data-i18n="po.s1d"></p></div></div>
+        <div class="step"><span class="num">2</span><div><b data-i18n="po.s2"></b><p data-i18n="po.s2d"></p></div></div>
+        <div class="step"><span class="num">3</span><div><b data-i18n="po.s3"></b><p data-i18n="po.s3d"></p></div></div>
+        <div class="step"><span class="num">4</span><div><b data-i18n="po.s4"></b><p data-i18n="po.s4d"></p></div></div>
+        <div class="step"><span class="num">5</span><div><b data-i18n="po.s5"></b><p data-i18n="po.s5d"></p></div></div>
+      </div>
+      <div class="batbox">
+        <div class="hd"><b>StartQueuePrinter.bat</b><span class="sub" data-i18n="po.batch"></span></div>
+        <pre id="batCode"></pre>
+        <div class="row" style="margin-top:12px"><button class="btn sm" id="dlBat" data-i18n="po.bat"></button><button class="btn ghost sm" id="cpBat" data-i18n="c.copy"></button></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="pfoot"><span data-i18n="po.footer"></span><span class="health" id="health"><i></i><span data-i18n="po.wait"></span></span></footer>
+<div class="toast" id="toast"></div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="js/config.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/common.js"></script>
-<script>
-/* 啟動操作密碼驗證 Enable operation password check */
-bindLoginForm(false);
-if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
-
-onState(s => {
-  const cs = (s.settings.counters || []);
-  document.getElementById('counterList').innerHTML = cs.map(c =>
-    `<a href="counter.html?id=${c.id}"><button class="btn-amber" style="width:100%">${c.name}<br><span class="hk">${c.nameZh}</span></button></a>`
-  ).join('') || '<p class="muted">No counters 暫無櫃位</p>';
-});
-
-document.getElementById('btnCounters').onclick = () => {
-  const el = document.getElementById('counterPick');
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
-};
-</script>
+<script src="js/portal.js"></script>
 </body></html>
