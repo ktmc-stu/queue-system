@@ -1,9 +1,9 @@
 /* css/style.css — shared white / blue system (ported from name-label) + queue screens */
 :root{
-  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","PingFang TC","PingFang HK","Microsoft JhengHei","Noto Sans TC",Helvetica,Arial,sans-serif;
-  --disp:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","PingFang TC","PingFang HK","Microsoft JhengHei","Noto Sans TC",Helvetica,Arial,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Courier New",monospace;
-  --cjk:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang HK",sans-serif;
+  --sans:"Microsoft JhengHei","微軟正黑體";
+  --disp:"Microsoft JhengHei","微軟正黑體";
+  --mono:"Microsoft JhengHei","微軟正黑體";
+  --cjk:"Microsoft JhengHei","微軟正黑體";
   --bg:#eff5fc;--surface:#fff;--panel:#f6faff;--raise:#e9f1fb;
   --text:#0f2340;--ink2:#26405e;--muted:#5a7391;--faint:#8ba1bd;
   --line:#dae6f4;--line2:#c2d6ea;--hair:#e9f1fa;
