@@ -1,6 +1,6 @@
 /* ===== 全域設定 Global config ===== */
 window.FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDMBiSM4oGSDE3khRISIxtxDCJJTLaxm0",
+  apiKey: "AIzaSyDMBiSM4oGSDE3khRISIxthDCJJTLaxxm8",
   authDomain: "ktmc-queue-system.firebaseapp.com",
   databaseURL: "https://ktmc-queue-system-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "ktmc-queue-system",
