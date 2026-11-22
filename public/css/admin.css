@@ -1,0 +1,41 @@
+/* css/admin.css — admin shell with left rail (ported from name-label) */
+.shell{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);min-height:calc(100vh - var(--nav))}
+.rail{position:sticky;top:var(--nav);align-self:start;height:calc(100vh - var(--nav));overflow:auto;background:var(--surface);border-right:1px solid var(--line);padding:12px 12px 28px}
+.rail .grp{display:block;text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);padding:14px 12px 6px}
+.rail button{display:flex;align-items:center;justify-content:flex-start;text-align:left;gap:10px;width:100%;padding:9px 12px;border-radius:8px;color:var(--muted);font-size:13.5px;font-weight:500;transition:background .15s,color .15s}
+.rail button:hover{background:var(--panel);color:var(--text)}
+.rail button.on{background:var(--acs);color:var(--acd)}
+.rail svg{width:16px;height:16px;flex:none}
+.rail .lbl{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail .bdg{margin-left:auto;flex:none;background:var(--bd);color:#fff;font:10.5px var(--mono);border-radius:999px;padding:1px 7px}
+.main{padding:24px clamp(14px,3vw,32px) 60px;min-width:0;max-width:1320px}
+.page{display:none}.page.on{display:block;animation:rise .26s var(--e) both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.phead{margin-bottom:18px}
+.phead h2{font-size:22px;margin:0 0 4px}
+.phead p{margin:0;color:var(--muted);font-size:13.5px;max-width:780px}
+.banner{border:1px solid var(--bdl);background:var(--bds);border-radius:var(--r);padding:16px 18px;margin-bottom:16px}
+.banner h4{margin:0 0 6px;font-size:14px;color:var(--bd)}
+.banner ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:#8d2c2c;line-height:1.8}
+.banner .row{margin-top:12px}
+.banner .note{margin-top:10px;font-size:12.5px;color:#8d2c2c}
+.ov{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:13px;margin-bottom:16px}
+.ovc{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:17px;box-shadow:var(--sh)}
+.ovc .n{font:500 27px/1.15 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.ovc.ac .n{color:var(--ac)}.ovc.ok .n{color:var(--ok)}.ovc.bd .n{color:var(--bd)}
+.ovc .l{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-top:4px}
+.ql{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px}
+.ql button{display:flex;align-items:center;justify-content:flex-start;text-align:left;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:15px;transition:border-color .15s,box-shadow .15s}
+.ql button:hover{border-color:var(--acl);box-shadow:var(--sh2)}
+.ql .ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;background:var(--acs);border:1px solid var(--acl);color:var(--ac);flex:none}
+.ql .ic svg{width:16px;height:16px}
+.ql b{display:block;font-size:14px}
+.ql small{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+@media(max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:sticky;top:var(--nav);height:auto;display:flex;gap:4px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px 10px;z-index:800}
+  .rail .grp{display:none}
+  .rail button{width:auto;white-space:nowrap;padding:8px 12px}
+  .rail .bdg{margin-left:6px}
+  .main{padding:18px 13px 48px}
+}
