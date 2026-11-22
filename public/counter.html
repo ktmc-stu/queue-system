@@ -1,123 +1,43 @@
-<!doctype html><html lang="zh-HK"><head>
+<!doctype html><html lang="zh-Hant-HK"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Counter 櫃位</title><link rel="stylesheet" href="css/style.css">
-</head><body>
-<div id="ktmcLogin" style="position:fixed; inset:0; background:linear-gradient(180deg,#f8fafc,#eef2f7); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px">
-  <div class="card" style="max-width:400px; width:100%; text-align:center">
-    <h3 style="border:none; padding:0; font-size:24px; margin-bottom:8px" id="ktmcLoginTitle">🔒 Login Required 需要登入</h3>
-    <p style="margin:0 0 4px" id="ktmcLoginDesc">請輸入密碼</p>
-    <p class="muted" style="margin:0 0 16px; font-size:13px" id="ktmcLoginDescEn">Enter the password to continue</p>
-    <input type="password" id="ktmcLoginPw" placeholder="Password 密碼" style="width:100%; text-align:center; font-size:18px; padding:14px">
-    <button id="ktmcLoginBtn" style="width:100%; margin-top:14px; font-size:16px; padding:14px">登入 Login</button>
-    <p id="ktmcLoginErr" style="margin-top:12px; color:#dc2626; font-weight:600; min-height:20px"></p>
-  </div>
+<title>Counter 櫃位</title>
+<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/lang.css">
+</head><body class="auth-locked" data-terminal="counter">
+<div class="topbar">
+  <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg><span id="title">Counter</span></div>
+  <div class="right"><span class="chip" id="sessChip"></span></div>
 </div>
-
-<div class="topbar"><span id="title">Counter</span><span class="chip" id="sessChip"></span></div>
-<div class="counter-wrap">
+<main class="counter-wrap">
   <div class="card">
     <div class="big-num" id="curNum">—</div>
     <div class="muted" style="text-align:center" id="curInfo"></div>
   </div>
   <div class="btn-grid">
-    <button id="btnNext">CALL NEXT<br><span class="hk">呼叫下一位</span></button>
-    <button id="btnRecall" class="btn-amber">RECALL<br><span class="hk">重新呼叫</span></button>
-    <button id="btnComplete" class="btn-green">COMPLETE<br><span class="hk">完成</span></button>
-    <button id="btnUndo" class="btn-gray">UNDO<br><span class="hk">撤回上一步</span></button>
-    <button id="btnStop" style="background:linear-gradient(135deg,#ef4444,#b91c1c); box-shadow:0 4px 14px rgba(239,68,68,.35)">STOP<br><span class="hk">停止播報</span></button>
-    <button id="btnPause" class="btn-gray">PAUSE<br><span class="hk">暫停服務</span></button>
-    <button id="btnCallNum" class="btn-gray">CALL NUMBER<br><span class="hk">指定號碼</span></button>
+    <button id="btnNext" class="btn">CALL NEXT<span class="hk">呼叫下一位</span></button>
+    <button id="btnRecall" class="btn warn">RECALL<span class="hk">重新呼叫</span></button>
+    <button id="btnComplete" class="btn ok">COMPLETE<span class="hk">完成</span></button>
+    <button id="btnUndo" class="btn gray">UNDO<span class="hk">撤回上一步</span></button>
+    <button id="btnStop" class="btn bad solid">STOP<span class="hk">停止播報</span></button>
+    <button id="btnPause" class="btn gray">PAUSE<span class="hk">暫停服務</span></button>
+    <button id="btnCallNum" class="btn ghost">CALL NUMBER<span class="hk">指定號碼</span></button>
   </div>
   <div class="card" id="keypadCard" style="display:none">
     <div class="keypad" id="keypad"></div>
     <div class="row" style="margin-top:10px">
       <input id="numInput" placeholder="A001" style="max-width:160px">
-      <button id="btnGo">Call 呼叫</button>
-      <button id="btnCloseKeypad" class="btn-gray">Close 關閉</button>
+      <button id="btnGo" class="btn">Call 呼叫</button>
+      <button id="btnCloseKeypad" class="btn gray">Close 關閉</button>
     </div>
   </div>
   <div class="card">
     <h3>Waiting 等候中</h3>
     <div class="waiting-list" id="waitList"></div>
   </div>
-</div>
-<div id="toast" class="toast"></div>
+</main>
+<div class="toast" id="toast"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="js/common.js"></script><script src="js/tts.js"></script>
-<script>
-/* 啟動操作密碼驗證 Enable operation password check */
-bindLoginForm(false);
-if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
-
-const $ = id => document.getElementById(id);
-const cid = new URLSearchParams(location.search).get('id') || 1;
-
-onState(s => {
-  const c = counterById(cid);
-  $('title').innerHTML = `${c.name} <span class="hk">${c.nameZh}</span>`;
-  $('sessChip').textContent = 'Session 時段 ' + s.session.prefix;
-  const cur = currentOf(cid);
-  $('curNum').textContent = cur ? cur.label : '—';
-  $('curInfo').textContent = cur ? 'Serving 服務中' : 'No active ticket 目前無服務中籌號';
-  const w = waiting();
-  const called = ticketsArr().filter(t => t.status === 'called');
-  $('waitList').innerHTML =
-    w.map(t => `<span>${t.label}</span>`).join('') +
-    called.map(t => `<span class="called-chip${String(t.counter)===String(cid)?' cur':''}">${t.label}</span>`).join('')
-    || '<span class="muted">No one 暫無</span>';
-
-  /* 暫停按鈕狀態更新 Pause button state update */
-  const paused = isCounterPaused(cid);
-  const btnP = $('btnPause');
-  if (paused) {
-    btnP.innerHTML = 'RESUME<br><span class="hk">恢復服務</span>';
-    btnP.style.background = 'linear-gradient(135deg,#10b981,#047857)';
-    btnP.style.boxShadow = '0 4px 14px rgba(16,185,129,.35)';
-  } else {
-    btnP.innerHTML = 'PAUSE<br><span class="hk">暫停服務</span>';
-    btnP.style.background = '';
-    btnP.className = 'btn-gray';
-  }
-});
-
-$('btnNext').onclick = async () => { const t = await callNext(cid); toast(t ? 'Called 已叫 ' + t.label : 'No waiting 無人等候'); };
-$('btnRecall').onclick = async () => { const t = currentOf(cid); if (!t) return toast('Nothing to recall 無可重呼'); await recall(cid); toast('Recalled 已重呼 ' + t.label); };
-$('btnComplete').onclick = async () => { const t = currentOf(cid); if (!t) return toast('No active ticket 無服務中籌號'); await completeTicket(t.key); toast('Completed 已完成 ' + t.label); };
-$('btnUndo').onclick = async () => {
-  const t = await undoCall(cid);
-  toast(t ? 'Undone 已撤回 ' + t.label + '（返回等候 Returned to queue）' : 'Nothing to undo 無可撤回');
-};
-$('btnStop').onclick = async () => { await stopCall(cid); toast('Stopped 已停止本櫃位廣播'); };
-
-/* 暫停／恢復服務 Pause / resume service */
-$('btnPause').onclick = async () => {
-  if (isCounterPaused(cid)) {
-    await resumeCounter(cid);
-    toast('Resumed 已恢復服務');
-  } else {
-    await pauseCounter(cid);
-    toast('Paused 已暫停服務');
-  }
-};
-
-$('btnCallNum').onclick = () => { $('keypadCard').style.display = $('keypadCard').style.display === 'none' ? 'block' : 'none'; };
-$('btnCloseKeypad').onclick = () => { $('keypadCard').style.display = 'none'; };
-const kp = ['1','2','3','4','5','6','7','8','9','⌫','0','⌦'];
-$('keypad').innerHTML = kp.map(k => `<button data-k="${k}">${k}</button>`).join('');
-$('keypad').onclick = e => {
-  const k = e.target.dataset.k; if (!k) return;
-  const inp = $('numInput');
-  if (k === '⌫') inp.value = inp.value.slice(0, -1);
-  else if (k === '⌦') inp.value = '';
-  else inp.value += k;
-};
-$('btnGo').onclick = async () => {
-  const v = $('numInput').value.trim(); if (!v) return;
-  const t = await callNumber(cid, v);
-  toast(t ? 'Called 已叫 ' + t.label : 'Not found 找不到該籌號');
-  if (t){ $('numInput').value = ''; $('keypadCard').style.display = 'none'; }
-};
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="js/config.js"></script><script src="js/i18n.js"></script><script src="js/auth.js"></script><script src="js/common.js"></script>
+<script src="js/counter.js"></script>
 </body></html>
