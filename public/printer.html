@@ -1,199 +1,36 @@
-<!doctype html><html lang="zh-HK"><head>
+<!doctype html><html lang="zh-Hant-HK"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Printer 遙控列印端</title><link rel="stylesheet" href="css/style.css">
-<style>
-/* 頁面顯示用：對比度修正 On-screen UI contrast fixes */
-.tag{background:#e2e8f0 !important;color:#0f172a !important;border:1px solid #64748b;border-radius:999px;padding:8px 16px;font-size:16px;font-weight:800}
-.dot{width:14px;height:14px;border-radius:50%;background:#dc2626;display:inline-block;flex:none}
-.dot.on{background:#16a34a;box-shadow:0 0 8px #16a34a}
-.log{background:#0b1220;color:#4ade80;font-family:ui-monospace,monospace;font-size:14px;border-radius:12px;padding:12px;height:280px;overflow:auto}
-.log div{padding:2px 0;border-bottom:1px solid #1e293b}
-
-/* 列印：號碼票完全沿用 style.css 原始設計，此處只加入自由列印與名單樣式 */
-#printArea{display:none}
-@media print{
-  body *{visibility:hidden}
-  #printArea,#printArea *{visibility:visible}
-  #printArea{display:block;position:absolute;left:0;top:0}
-  /* 號碼票安全邊距 */
-  #printArea:not(.f-free){width:80mm !important;padding:0 4mm !important;box-sizing:border-box !important}
-  #printArea.p58:not(.f-free){width:58mm !important;padding:0 3mm !important;box-sizing:border-box !important}
-  /* 自由列印 */
-  #printArea.f-free{width:80mm !important}
-  #printArea.f-free .f-wrap{width:100%;padding:0 4mm;box-sizing:border-box;margin:0 auto;text-align:center}
-  #printArea.f-free .f-img{width:100%;height:auto;display:block;margin:0 auto}
-  #printArea.f-free .f-text{font-family:"Noto Sans TC","PingFang HK","Microsoft JhengHei",sans-serif;font-size:16px !important;line-height:1.7;text-align:left;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;margin-top:6px}
-  /* 等候名單表格 */
-  #printArea.f-free .f-title{font-size:18px;font-weight:800;text-align:center}
-  #printArea.f-free .f-sub{font-size:12px;text-align:center;margin:2px 0 6px}
-  #printArea.f-free .w-table{width:100%;border-collapse:collapse}
-  #printArea.f-free .w-table td{border:1px solid #000;padding:4px 2px;text-align:center;font-size:14px;font-family:ui-monospace,monospace}
-  #printArea.f-free .w-table .wt{font-size:10px;margin-top:1px}
-}
-</style>
-</head><body>
-<div id="ktmcLogin" style="position:fixed; inset:0; background:linear-gradient(180deg,#f8fafc,#eef2f7); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px">
-  <div class="card" style="max-width:400px; width:100%; text-align:center">
-    <h3 style="border:none; padding:0; font-size:24px; margin-bottom:8px" id="ktmcLoginTitle">🔒 Login Required 需要登入</h3>
-    <p style="margin:0 0 4px" id="ktmcLoginDesc">請輸入密碼</p>
-    <p class="muted" style="margin:0 0 16px; font-size:13px" id="ktmcLoginDescEn">Enter the password to continue</p>
-    <input type="password" id="ktmcLoginPw" placeholder="Password 密碼" style="width:100%; text-align:center; font-size:18px; padding:14px">
-    <button id="ktmcLoginBtn" style="width:100%; margin-top:14px; font-size:16px; padding:14px">登入 Login</button>
-    <p id="ktmcLoginErr" style="margin-top:12px; color:#dc2626; font-weight:600; min-height:20px"></p>
-  </div>
+<title>Printer 列印端</title>
+<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/lang.css">
+</head><body class="auth-locked" data-terminal="printer">
+<div class="topbar">
+  <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span data-i18n="app.printer"></span></div>
+  <div class="right"><span class="chip" id="sessChip"></span></div>
 </div>
-
-<div class="topbar"><span>Printer 遙控列印端</span><span class="chip" id="sessChip"></span></div>
-<div class="admin-wrap">
+<main class="admin-wrap">
   <div class="card">
-    <h3>Status 狀態</h3>
-    <div class="row" style="align-items:center">
-      <span class="dot" id="dot"></span>
-      <b id="statusText" style="font-size:18px">等待連線 Connecting…</b>
-    </div>
-    <p class="muted" style="margin-top:8px">此電腦需保持開啟並連接熱敏打印機。取號或 Admin 自由列印指令都會在此自動列印。<br>
-    Keep this PC on with the thermal printer. Ticket & free-print jobs print here automatically.</p>
+    <h3 data-i18n="c.status"></h3>
+    <div class="row"><span class="dot" id="dot"></span><b id="statusText" style="font-size:16px" data-i18n="pr.connecting"></b></div>
+    <p class="muted" style="margin-top:8px" data-i18n="pr.keepOn"></p>
     <div class="row" style="margin-top:12px">
-      <span class="tag" id="paperChip">Paper 紙張：—</span>
-      <span class="tag" id="countChip">Queue 隊列：0</span>
+      <span class="tag" id="paperChip">—</span>
+      <span class="tag" id="countChip">—</span>
     </div>
     <div class="row" style="margin-top:12px">
-      <button id="btnTest" class="btn-amber">Test Print 測試列印</button>
-      <button id="btnClearQueue" class="btn-gray">Clear Queue 清空列印隊列</button>
+      <button id="btnTest" class="btn warn" data-i18n="pr.test"></button>
+      <button id="btnClearQueue" class="btn gray" data-i18n="pr.clear"></button>
     </div>
   </div>
-
   <div class="card">
-    <h3>Print Log 列印記錄</h3>
+    <h3 data-i18n="pr.log"></h3>
     <div class="log" id="log"></div>
   </div>
-</div>
-
+</main>
 <div id="printArea"></div>
-<div id="toast" class="toast"></div>
-
+<div class="toast" id="toast"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="js/common.js"></script>
-<script>
-/* 🟢 終極防休眠 Hack：使用 Web Worker 打破 Chrome 背景 1 分鐘節流限制 */
-(function keepAlive() {
-  const code = `setInterval(()=>postMessage(1), 500);`;
-  const blob = new Blob([code], {type:'application/javascript'});
-  const w = new Worker(URL.createObjectURL(blob));
-  w.onmessage = () => {};
-  console.log('🔊 Web Worker 防休眠已啟動');
-})();
-
-bindLoginForm(false);
-if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
-
-const $ = id => document.getElementById(id);
-const jobs = []; const seen = {};
-let printing = false;
-
-function log(msg){ const d=document.createElement('div'); d.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`; $('log').prepend(d); }
-function updateCount(){ $('countChip').textContent = 'Queue 隊列：' + jobs.length; }
-function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-onState(s => {
-  $('dot').classList.add('on');
-  $('statusText').textContent = '已連線・監控列印隊列中 Online & watching';
-  $('sessChip').textContent = 'Session 時段 ' + s.session.prefix;
-  $('paperChip').textContent = 'Paper 紙張：' + ((s.settings.paper === '58') ? '58mm' : '80mm');
-});
-
-function enqueue(key, j){
-  if (seen[key]) return;
-  seen[key] = 1;
-  jobs.push(Object.assign({ key: key }, j));
-  updateCount();
-  log(`收到指令 Job: ${j.type==='free' ? '自由列印 Free' : (j.type==='waitlist' ? '等候名單 Waiting List' : j.label)}${j.reprint?'（重印 Reprint）':''}`);
-  processJobs();
-}
-stateRef.child('printQueue').on('child_added', snap => { const j=snap.val(); if(!j||j.done) return; enqueue(snap.key,j); });
-setInterval(() => {
-  stateRef.child('printQueue').once('value').then(snap => {
-    const all = snap.val() || {};
-    Object.keys(all).forEach(k => { const j=all[k]; if(j && !j.done && !seen[k]) enqueue(k,j); });
-  }).catch(()=>{});
-}, 3000);
-
-async function processJobs(){
-  if (printing) return;
-  printing = true;
-  while (jobs.length){
-    const j = jobs.shift();
-    updateCount();
-    await stateRef.child('printQueue/' + j.key).remove().catch(()=>{});
-    printJob(j);
-    await new Promise(r => setTimeout(r, 900));
-  }
-  printing = false;
-}
-const DEFAULT_TICKET_NOTE = '請妥善保管此籌號，並留意顯示屏及廣播。\nPlease keep this ticket and wait for your turn.\n若連續叫號3次後仍未到場，籌號將作廢。\nYour ticket will be canceled after three missed calls.\n如不慎過號，請重新取號輪候。\nPlease get a new ticket if you missed your turn.';
-function noteHTML(){
-  const txt = (STATE && STATE.settings && STATE.settings.ticketNote) ? STATE.settings.ticketNote : DEFAULT_TICKET_NOTE;
-  return escapeHtml(txt).replace(/\n/g,'<br>');
-}
-function ticketHTML(j){
-  return `
-    ${j.reprint ? '<div class="t-reprint">Reprinted 重新列印</div>' : ''}
-    <div class="t-head"><img src="img/logo.png" alt="logo"><div>
-      <div class="t-school-zh">觀塘瑪利諾書院</div>
-      <div class="t-school-en">KWUN TONG MARYKNOLL COLLEGE</div></div></div>
-    <div class="t-center">
-      <div class="t-title">號碼票</div><div class="t-title-en">QUEUE TICKET</div>
-      <div class="t-num">${j.label}</div>
-      <div class="t-row">發行時間 Issuing Time: ${j.time}</div>
-      ${j.reprint ? `<div class="t-row">重印時間 Reprint Time: ${nowLabel()}</div>` : ''}
-      <div class="t-row">時段 Session: ${j.session}</div>
-    </div>
-    <div class="t-note">${noteHTML()}</div>`;
-}
-
-function freeHTML(j){
-  let h = '<div class="f-wrap">';
-  if (j.image) h += `<img class="f-img" src="${j.image}">`;
-  if (j.text)  h += `<div class="f-text">${escapeHtml(j.text).replace(/\n/g,'<br>')}</div>`;
-  return h + '</div>';
-}
-
-function listHTML(j){
-  const cols = 4;
-  const items = j.items || [];
-  let rows = '';
-  for (let i=0;i<items.length;i+=cols){
-    rows += '<tr>' + items.slice(i,i+cols).map(x=>{
-      if (typeof x === 'string') return `<td>${escapeHtml(x)}</td>`;
-      return `<td>${escapeHtml(x.l)}${x.t ? `<div class="wt">${escapeHtml(x.t)}</div>` : ''}</td>`;
-    }).join('') + '</tr>';
-  }
-  return `<div class="f-wrap">
-    <div class="f-title">等候名單 Waiting List</div>
-    <div class="f-sub">時段 Session ${escapeHtml(j.session||'')} ・ 共 ${items.length} 位 Total<br>列印時間 Print Time：${nowLabel()}</div>
-    <table class="w-table">${rows}</table>
-  </div>`;
-}
-function printJob(j){
-  const pa = $('printArea');
-  const isFree = (j.type === 'free' || j.type === 'waitlist');
-  pa.className = isFree ? 'f-free' : ((STATE && STATE.settings.paper === '58') ? 'p58' : '');
-  pa.innerHTML = isFree ? ((j.type === 'waitlist') ? listHTML(j) : freeHTML(j)) : ticketHTML(j);
-  const copies = Math.max(1, j.copies || 1);
-  setTimeout(() => {
-    for (let i=0;i<copies;i++) window.print();
-    log(`✅ ${(j.label || '自由列印 Free')} x${copies} 已發送 Sent`);
-  }, 250);
-}
-
-$('btnTest').onclick = () => printJob({ type:'free', text:'TEST 測試列印\n' + nowLabel(), copies:1 });
-$('btnClearQueue').onclick = async () => {
-  if (!confirm('清空所有列印隊列？\nClear all print queue?')) return;
-  await stateRef.child('printQueue').remove();
-  jobs.length = 0; updateCount(); log('隊列已清空 Queue cleared');
-};
-log('系統就緒 System ready (Anti-Sleep Mode)');
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="js/config.js"></script><script src="js/i18n.js"></script><script src="js/auth.js"></script><script src="js/common.js"></script>
+<script src="js/printer.js"></script>
 </body></html>
