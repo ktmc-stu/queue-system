@@ -1,185 +1,25 @@
-<!doctype html><html lang="zh-HK"><head>
+<!doctype html><html lang="zh-Hant-HK"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Display 顯示屏</title><link rel="stylesheet" href="css/style.css">
-</head><body>
-<div id="ktmcLogin" style="position:fixed; inset:0; background:linear-gradient(180deg,#f8fafc,#eef2f7); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px">
-  <div class="card" style="max-width:400px; width:100%; text-align:center">
-    <h3 style="border:none; padding:0; font-size:24px; margin-bottom:8px" id="ktmcLoginTitle">🔒 Login Required 需要登入</h3>
-    <p style="margin:0 0 4px" id="ktmcLoginDesc">請輸入密碼</p>
-    <p class="muted" style="margin:0 0 16px; font-size:13px" id="ktmcLoginDescEn">Enter the password to continue</p>
-    <input type="password" id="ktmcLoginPw" placeholder="Password 密碼" style="width:100%; text-align:center; font-size:18px; padding:14px">
-    <button id="ktmcLoginBtn" style="width:100%; margin-top:14px; font-size:16px; padding:14px">登入 Login</button>
-    <p id="ktmcLoginErr" style="margin-top:12px; color:#dc2626; font-weight:600; min-height:20px"></p>
-  </div>
+<title>Display 顯示屏</title>
+<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/lang.css">
+</head><body class="auth-locked" data-terminal="display">
+<div class="topbar stage">
+  <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span id="dpTitle"></span></div>
+  <span class="ticker" id="ticker"></span>
+  <div class="right"><span class="chip" id="sessChip"></span></div>
 </div>
-
-<div class="display-wrap">
-  <div class="display-header">
-    <span id="footerTitle"></span>
-    <span class="ticker" id="ticker"></span>
-  </div>
+<main class="display-wrap">
   <div class="card call-grid" id="callGrid"></div>
   <div class="card queue-panel">
     <h2>Waiting 等候中</h2>
     <div class="queue-items" id="queueItems"></div>
   </div>
-</div>
+</main>
 <button id="startTts">START SOUND 開啟廣播聲音</button>
-<div id="toast" class="toast"></div>
-
+<div class="toast" id="toast"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="js/common.js"></script><script src="js/tts.js"></script>
-<script>
-/* 啟動操作密碼驗證 Enable operation password check */
-bindLoginForm(false);
-if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
-
-let lastSeq = 0, lastUndoSeq = 0, lastStopSeq = 0;
-let pending = [], announcing = false;
-let flashId = null, flashUntil = 0;
-let annLabel = null, annCounter = null;
-
-onState(s => {
-  document.getElementById('footerTitle').innerHTML = `${s.settings.title} <span class="hk">${s.settings.subtitle}</span>`;
-
-  const w = waiting();
-  document.getElementById('queueItems').innerHTML = w.map(t=>`<span>${t.label}</span>`).join('') || '<span class="muted">No one waiting 暫無等候</span>';
-
-  renderGrid(s);
-
-  const lc = s.lastCall;
-  if (lc){
-    const c = counterById(lc.counter);
-    document.getElementById('ticker').textContent = `Now Calling 現正呼叫 ${lc.ticket.label} → ${c.name} ${c.nameZh} · 請 ${lc.ticket.label} 到${c.nameZh}`;
-  }
-
-  /* 撤回信號 Undo signal */
-  const lu = s.lastUndo;
-  if (lu && lu.seq !== lastUndoSeq){
-    lastUndoSeq = lu.seq;
-    pending = pending.filter(x => !(x.ticket.label === lu.label && Number(x.counter) === Number(lu.counter)));
-    if (annLabel === lu.label && Number(annCounter) === Number(lu.counter)){
-      stopAudio();
-      annLabel = null;
-    }
-    if (flashId != null && Number(flashId) === Number(lu.counter)){
-      flashId = null; flashUntil = 0; renderGrid(STATE);
-    }
-  }
-
-  /* 停止信號（'*' = 全部停止） Stop signal ('*' = stop all) */
-  const ls = s.lastStop;
-  if (ls && ls.seq !== lastStopSeq){
-    lastStopSeq = ls.seq;
-    const all = ls.counter === '*';
-    pending = all ? [] : pending.filter(x => Number(x.counter) !== Number(ls.counter));
-    if (all || (annCounter != null && Number(annCounter) === Number(ls.counter))){
-      stopAudio();
-      annLabel = null;
-    }
-    if (all || (flashId != null && Number(flashId) === Number(ls.counter))){
-      flashId = null; flashUntil = 0; renderGrid(STATE);
-    }
-  }
-
-  if (lc && lc.seq !== lastSeq){
-    lastSeq = lc.seq;
-    pending.push(lc);
-    processQueue();
-  }
-});
-
-function renderGrid(s){
-  const byCounter = {};
-  ticketsArr().forEach(t => {
-    if (t.status !== 'called') return;
-    const cur = byCounter[t.counter];
-    if (!cur || (t.calledAt||0) >= (cur.calledAt||0)) byCounter[t.counter] = t;
-  });
-  const ids = (s.settings.counters||[]).map(c => c.id);
-  Object.keys(byCounter).forEach(id => { if (!ids.includes(Number(id))) ids.push(Number(id)); });
-  const now = Date.now();
-
-  document.getElementById('callGrid').innerHTML = ids.map(id => {
-    const t = byCounter[id];
-    const c = counterById(id);
-    const active = flashId != null && Number(id) === Number(flashId) && now < flashUntil;
-    const num = String(c.name || '').replace(/\D/g,'') || String(id);
-
-    /* 暫停服務判斷 Pause check */
-    const paused = s.counters && s.counters[id] && s.counters[id].paused;
-    const numHtml = paused
-      ? '<span class="paused-txt">Suspended<small>暫停服務</small></span>'
-      : (t ? t.label : '—');
-
-    return `<div class="call-item${active ? ' active' : ''}">
-      <div class="ci-en">Counter</div>
-      <div class="ci-zh">櫃位</div>
-      <div class="ci-id">${num}</div>
-      <div class="ci-num">${numHtml}</div>
-    </div>`;
-  }).join('') || '<div class="call-item"><div class="ci-en muted">Counter</div><div class="ci-zh muted">櫃位</div><div class="ci-id">—</div><div class="ci-num">—</div></div>';
-}
-
-async function processQueue(){
-  if (announcing) return;
-  announcing = true;
-  while (pending.length){
-    const lc = pending.shift();
-    const c = counterById(lc.counter);
-    flashId = lc.counter; flashUntil = Date.now() + 8000;
-    renderGrid(STATE);
-    setTimeout(() => renderGrid(STATE), 8100);
-    annLabel = lc.ticket.label; annCounter = lc.counter;
-    stateRef.child('nowPlaying').set({ label: lc.ticket.label, counter: lc.counter, at: Date.now() });
-    await announce(STATE.settings.tts.languages, { ...STATE.settings.tts, phrases: {
-      en:  buildPhrase('en',  lc.ticket.label, c),
-      yue: buildPhrase('yue', lc.ticket.label, c),
-      zh:  buildPhrase('zh',  lc.ticket.label, c)
-    }}, false);
-    annLabel = null;
-  }
-  announcing = false;
-  stateRef.child('nowPlaying').set(null);
-}
-
-document.getElementById('startTts').onclick = () => {
-  chime();
-  document.getElementById('startTts').style.display = 'none';
-};
-
-/* 垂直自動滾動 Vertical auto-scroll */
-function autoScrollV(el, step, interval, holdMs){
-  step = step || 2; interval = interval || 40; holdMs = holdMs || 2000;
-  if (!el) return;
-  let holding = false;
-  setInterval(() => {
-    if (el.scrollHeight <= el.clientHeight + 4){ if (el.scrollTop) el.scrollTop = 0; return; }
-    if (holding) return;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2){
-      holding = true;
-      setTimeout(() => { el.scrollTo({ top:0, behavior:'smooth' }); setTimeout(() => { holding = false; }, 900); }, holdMs);
-    } else { el.scrollTop += step; }
-  }, interval);
-}
-
-/* 水平自動滾動 Horizontal auto-scroll */
-function autoScrollH(el, step, interval, holdMs){
-  step = step || 2; interval = interval || 40; holdMs = holdMs || 2000;
-  if (!el) return;
-  let holding = false;
-  setInterval(() => {
-    if (el.scrollWidth <= el.clientWidth + 4){ if (el.scrollLeft) el.scrollLeft = 0; return; }
-    if (holding) return;
-    if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 2){
-      holding = true;
-      setTimeout(() => { el.scrollTo({ left:0, behavior:'smooth' }); setTimeout(() => { holding = false; }, 900); }, holdMs);
-    } else { el.scrollLeft += step; }
-  }, interval);
-}
-autoScrollV(document.getElementById('callGrid'));
-autoScrollH(document.getElementById('queueItems'));
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="js/config.js"></script><script src="js/i18n.js"></script><script src="js/auth.js"></script><script src="js/common.js"></script>
+<script src="js/tts.js"></script><script src="js/display.js"></script>
 </body></html>
