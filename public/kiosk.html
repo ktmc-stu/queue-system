@@ -1,68 +1,24 @@
-<!doctype html><html lang="zh-HK"><head>
+<!doctype html><html lang="zh-Hant-HK"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kiosk 遙距取號</title><link rel="stylesheet" href="css/style.css">
-<style>
-.kiosk-wrap{min-height:calc(100vh - 64px); display:flex; flex-direction:column; align-items:center;
-  justify-content:center; gap:22px; padding:20px; text-align:center}
-.k-hero-title{font-size:clamp(26px,4vw,44px); font-weight:600; letter-spacing:1px}
-.k-hero-sub{font-size:clamp(15px,2vw,20px); color:var(--muted); margin-top:4px}
-#takeBtn{width:min(560px,90vw); height:min(420px,52vh); border-radius:36px;
-  font-size:clamp(28px,4vw,46px); line-height:1.3; font-weight:600;
-  background:linear-gradient(160deg,#3b82f6,#1e3a8a); box-shadow:0 18px 50px rgba(30,64,175,.45);
-  animation:breath 2.6s ease-in-out infinite}
-.k-stats{display:flex; gap:14px; flex-wrap:wrap; justify-content:center}
-.k-stat{background:#fff; border:1px solid var(--line); border-radius:14px; padding:10px 18px;
-  font-weight:700; box-shadow:var(--shadow); font-size:18px}
-.k-stat small{display:block; font-weight:600; color:var(--muted); font-size:12px; margin-bottom:2px}
-.k-note{max-width:640px; color:var(--muted); line-height:1.7; font-size:14px}
-.k-ticket-card{background:#fff; border:2px dashed #94a3b8; border-radius:20px; padding:26px 52px;
-  box-shadow:var(--shadow)}
-.k-ticket-card .t-label{font-size:13px; font-weight:700; color:var(--muted); letter-spacing:3px}
-.k-ticket-card .t-num{font-size:clamp(72px,12vw,140px); font-weight:600; line-height:1.05;
-  background:linear-gradient(135deg,#1d4ed8,#60a5fa); -webkit-background-clip:text; background-clip:text; color:transparent}
-.k-ticket-card .t-meta{font-size:14px; color:var(--muted); font-weight:600; margin-top:4px}
-.k-back{font-size:13px; color:var(--muted)}
-.rp-chip{background:#f1f5f9; color:var(--text); box-shadow:none; padding:10px 16px; font-size:16px; border-radius:10px}
-.rp-chip:hover{background:#e2e8f0}
-.rp-ticket{background:#fff; border:1.5px dashed #94a3b8; border-radius:12px; padding:16px;
-  font-size:13px; line-height:1.7; color:#000; text-align:left}
-.rp-ticket .badge{display:inline-block; border:1px solid #000; padding:2px 8px; font-weight:700; margin-bottom:8px}
-.rp-ticket .num{font-size:48px; font-weight:600; text-align:center; margin:6px 0; letter-spacing:2px}
-.rp-ticket .center{text-align:center}
-.rp-ticket .b{font-weight:700}
-@media (max-width:640px){
-  #takeBtn{height:min(300px,44vh); border-radius:26px}
-  .k-ticket-card{padding:18px 28px}
-  .k-stat{font-size:15px; padding:8px 14px}
-}
-</style>
-</head><body>
-<div id="ktmcLogin" style="position:fixed; inset:0; background:linear-gradient(180deg,#f8fafc,#eef2f7); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px">
-  <div class="card" style="max-width:400px; width:100%; text-align:center">
-    <h3 style="border:none; padding:0; font-size:24px; margin-bottom:8px" id="ktmcLoginTitle">🔒 Login Required 需要登入</h3>
-    <p style="margin:0 0 4px" id="ktmcLoginDesc">請輸入密碼</p>
-    <p class="muted" style="margin:0 0 16px; font-size:13px" id="ktmcLoginDescEn">Enter the password to continue</p>
-    <input type="password" id="ktmcLoginPw" placeholder="Password 密碼" style="width:100%; text-align:center; font-size:18px; padding:14px">
-    <button id="ktmcLoginBtn" style="width:100%; margin-top:14px; font-size:16px; padding:14px">登入 Login</button>
-    <p id="ktmcLoginErr" style="margin-top:12px; color:#dc2626; font-weight:600; min-height:20px"></p>
-  </div>
+<title>Kiosk 取號機</title>
+<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/lang.css">
+</head><body class="auth-locked" data-terminal="kiosk">
+<div class="topbar">
+  <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/><path d="M13 5v2M13 11v2M13 17v2"/></svg><span data-i18n="app.kiosk"></span></div>
+  <div class="right"><span class="chip" id="sessChip"></span></div>
 </div>
 
-<div class="topbar"><span id="title">Kiosk 取號</span><span class="chip" id="sessChip"></span></div>
-
+<main>
 <div class="kiosk-wrap" id="homeView">
-  <div>
-    <div class="k-hero-title" id="heroTitle"></div>
-    <div class="k-hero-sub" id="heroSub"></div>
-  </div>
-  <button id="takeBtn">TAKE A TICKET<br>取 號</button>
+  <div><div class="k-hero-title" id="heroTitle"></div><div class="k-hero-sub" id="heroSub"></div></div>
+  <button id="takeBtn"><small>TAKE A TICKET</small>取 號</button>
   <div class="k-stats">
-    <div class="k-stat"><small>Waiting 等候中（人數 Persons）</small><span id="statWait">0</span></div>
-    <div class="k-stat"><small>Est. wait 預計等候（分鐘 Minutes）</small><span id="statEst">—</span></div>
+    <div class="k-stat"><small>Waiting 等候中（Persons 人數）</small><span id="statWait">0</span></div>
+    <div class="k-stat"><small>Est. wait 預計等候（Minutes 分鐘）</small><span id="statEst">—</span></div>
   </div>
   <div class="row" style="justify-content:center">
-    <button id="btnReprint" class="btn-gray">REPRINT<br><span class="hk">重印憑條</span></button>
-    <button id="btnPaper" class="btn-gray">PAPER<br><span class="hk">紙張設定</span></button>
+    <button id="btnReprint" class="btn gray lg">REPRINT<span class="hk">重印憑條</span></button>
+    <button id="btnPaper" class="btn gray lg">PAPER<span class="hk">紙張設定</span></button>
   </div>
   <div class="k-note" id="note"></div>
 </div>
@@ -76,7 +32,7 @@
   </div>
   <div class="k-stats">
     <div class="k-stat"><small>Ahead 前方人數 Persons</small><span id="tvAhead">0</span></div>
-    <div class="k-stat"><small>Est. wait 預計等候（分鐘 Minutes）</small><span id="tvEst">—</span></div>
+    <div class="k-stat"><small>Est. wait 預計等候 Minutes</small><span id="tvEst">—</span></div>
   </div>
   <div class="k-note">Please keep this ticket and watch for the display announcement. 請保留此籌號，並留意顯示屏廣播。憑條將於打印機處自動印出。 Your slip will be printed automatically at the printer station.</div>
   <div class="k-back" id="backCount"></div>
@@ -84,223 +40,39 @@
 
 <div class="kiosk-wrap" id="reprintView" style="display:none">
   <div class="k-hero-title">Reprint 重印憑條</div>
-  <div class="card" id="rpLock" style="max-width:380px; width:100%; text-align:center">
-    <p class="muted" style="margin-bottom:10px">Admin password required 需要管理員密碼</p>
-    <input type="password" id="rpPw" placeholder="Password 密碼">
-    <div class="row" style="margin-top:12px; justify-content:center">
-      <button id="rpUnlock">Unlock 解鎖</button>
-      <button id="rpBack1" class="btn-gray">Back 返回</button>
-    </div>
-    <p id="rpErr" style="color:#dc2626; font-weight:600; margin-top:8px"></p>
+  <div class="help" id="rpDenied" style="display:none;max-width:420px" data-i18n="k.adminOnly"></div>
+  <div class="card" id="rpList" style="display:none;max-width:760px;width:100%;max-height:62vh;overflow:auto;text-align:left">
+    <h3 style="border:none;padding:0;margin-bottom:10px">Choose ticket 選擇要重印的籌號</h3>
+    <div id="rpItems" style="display:flex;flex-wrap:wrap;gap:8px"></div>
   </div>
-  <div class="card" id="rpList" style="display:none; max-width:760px; width:100%; max-height:62vh; overflow:auto; text-align:left">
-    <h3 style="border:none; padding:0; margin-bottom:10px">Choose ticket 選擇要重印的籌號</h3>
-    <div id="rpItems" style="display:flex; flex-wrap:wrap; gap:8px"></div>
-    <div class="row" style="margin-top:14px"><button id="rpBack2" class="btn-gray">Back 返回</button></div>
-  </div>
-  <div class="card" id="rpPreview" style="display:none; max-width:420px; width:100%">
+  <div class="card" id="rpPreview" style="display:none;max-width:420px;width:100%">
     <div id="rpPrevBody"></div>
-    <div class="row" style="margin-top:14px; justify-content:center">
-      <button id="rpPrint" class="btn-green">Print 確定列印</button>
-      <button id="rpBack3" class="btn-gray">Back 返回</button>
+    <div class="row" style="margin-top:14px;justify-content:center">
+      <button id="rpPrint" class="btn ok">Print 確定列印</button>
+      <button id="rpBack3" class="btn gray">Back 返回</button>
     </div>
   </div>
+  <div class="row"><button id="rpBack1" class="btn gray">Back 返回</button></div>
 </div>
 
 <div class="kiosk-wrap" id="paperView" style="display:none">
   <div class="k-hero-title">Paper 紙張設定</div>
-  <div class="card" id="ppLock" style="max-width:380px; width:100%; text-align:center">
-    <p class="muted" style="margin-bottom:10px">Admin password required 需要管理員密碼</p>
-    <input type="password" id="ppPw" placeholder="Password 密碼">
-    <div class="row" style="margin-top:12px; justify-content:center">
-      <button id="ppUnlock">Unlock 解鎖</button>
-      <button id="ppBack1" class="btn-gray">Back 返回</button>
-    </div>
-    <p id="ppErr" style="color:#dc2626; font-weight:600; margin-top:8px"></p>
-  </div>
-  <div class="card" id="ppChoose" style="display:none; max-width:420px; width:100%; text-align:center">
+  <div class="help" id="ppDenied" style="display:none;max-width:420px" data-i18n="k.adminOnly"></div>
+  <div class="card" id="ppChoose" style="display:none;max-width:420px;width:100%;text-align:center">
     <p class="muted" style="margin-bottom:12px">Current 目前：<b id="ppCur" style="color:var(--text)">80mm</b></p>
     <div class="row" style="justify-content:center">
-      <button id="pp80" style="min-width:140px">80mm</button>
-      <button id="pp58" class="btn-amber" style="min-width:140px">58mm</button>
+      <button id="pp80" class="btn" style="min-width:140px">80mm</button>
+      <button id="pp58" class="btn warn" style="min-width:140px">58mm</button>
     </div>
-    <div class="row" style="margin-top:14px; justify-content:center"><button id="ppBack2" class="btn-gray">Back 返回</button></div>
   </div>
+  <div class="row"><button id="ppBack1" class="btn gray">Back 返回</button></div>
 </div>
+</main>
 
-<div id="toast" class="toast"></div>
+<div class="toast" id="toast"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="js/common.js"></script>
-<script>
-bindLoginForm(false);
-if (!KTMC_USER_AUTHED) { window.onAfterLogin = () => location.reload(); }
-
-const $ = id => document.getElementById(id);
-let busy = false, backTimer = null, takenNo = null, shownAt = 0, rpTicket = null;
-
-document.addEventListener('pointerdown', () => {
-  if (takenNo != null && Date.now() - shownAt > 1500) goHome();
-});
-
-onState(s => {
-  $('title').innerHTML = `${s.settings.title} <span class="hk">${s.settings.subtitle}</span>`;
-  $('sessChip').textContent = 'Session 時段 ' + s.session.prefix;
-  $('heroTitle').textContent = s.settings.title;
-  $('heroSub').textContent = s.settings.subtitle;
-  $('note').textContent = s.settings.note;
-  $('ppCur').textContent = (s.settings.paper === '58') ? '58mm' : '80mm';
-
-  const w = waiting();
-  const counters = (s.settings.counters || []).length || 1;
-  const avg = s.settings.avgMinutes || 3;
-  $('statWait').textContent = w.length;
-  $('statEst').textContent = Math.ceil(w.length * avg / counters);
-  if (takenNo != null){
-    const ahead = w.filter(t => t.no < takenNo).length;
-    $('tvAhead').textContent = ahead;
-    $('tvEst').textContent = Math.ceil(ahead * avg / counters);
-  }
-});
-
-/* ===== 遙控列印：將指令寫入 Firebase 隊列，由 printer.html 自動列印
-   Remote print: push a job to the Firebase queue; printer.html prints it automatically ===== */
-function remotePrint(t, reprint){
-  stateRef.child('printQueue').push({
-    label: t.label,
-    no: t.no,
-    time: t.time || nowLabel(),
-    session: STATE.session.prefix,
-    reprint: !!reprint,
-    createdAt: Date.now(),
-    done: false
-  }).then(() => toast('️ 已傳送列印指令 Print job sent'))
-    .catch(() => toast('⚠️ 列印指令傳送失敗 Print job failed'));
-}
-
-/* ===== 取號 Take a ticket ===== */
-$('takeBtn').onclick = async () => {
-  if (busy) return; busy = true;
-  const t = await takeTicket();
-  takenNo = t.no;
-  shownAt = Date.now();
-
-  $('tvNum').textContent = t.label;
-  $('tvMeta').textContent = `時段 Session ${STATE.session.prefix} · ${t.time}`;
-  $('homeView').style.display = 'none';
-  $('ticketView').style.display = 'flex';
-
-  remotePrint(t, false);   // 遙控列印 Remote print
-
-  let sec = 10;
-  $('backCount').textContent = `Tap anywhere to return 點擊任何位置返回 · ${sec} 秒 s`;
-  clearInterval(backTimer);
-  backTimer = setInterval(() => {
-    sec--;
-    $('backCount').textContent = `Tap anywhere to return 點擊任何位置返回 · ${sec} 秒 s`;
-    if (sec <= 0) goHome();
-  }, 1000);
-  busy = false;
-};
-
-function goHome(){
-  clearInterval(backTimer);
-  takenNo = null;
-  $('ticketView').style.display = 'none';
-  $('reprintView').style.display = 'none';
-  $('paperView').style.display = 'none';
-  $('homeView').style.display = 'flex';
-}
-
-/* ===== 紙張設定 Paper setting ===== */
-$('btnPaper').onclick = () => {
-  $('homeView').style.display = 'none';
-  $('paperView').style.display = 'flex';
-  $('ppLock').style.display = 'block';
-  $('ppChoose').style.display = 'none';
-  $('ppPw').value = '';
-  $('ppErr').textContent = '';
-};
-$('ppBack1').onclick = goHome;
-$('ppBack2').onclick = goHome;
-$('ppUnlock').onclick = () => {
-  const pw = $('ppPw').value;
-  stateRef.child('settings/adminPw').once('value').then(snap => {
-    if (pw === (snap.val() || 'ktmc881485')) {
-      $('ppLock').style.display = 'none';
-      $('ppChoose').style.display = 'block';
-    } else {
-      $('ppErr').textContent = 'Wrong password 密碼錯誤';
-    }
-  });
-};
-$('ppPw').addEventListener('keydown', e => { if (e.key === 'Enter') $('ppUnlock').onclick(); });
-$('pp80').onclick = async () => { await saveSettings({ ...STATE.settings, paper:'80' }); toast('Paper 80mm saved 已儲存'); };
-$('pp58').onclick = async () => { await saveSettings({ ...STATE.settings, paper:'58' }); toast('Paper 58mm saved 已儲存'); };
-
-/* ===== 重印 Reprint ===== */
-$('btnReprint').onclick = () => {
-  $('homeView').style.display = 'none';
-  $('reprintView').style.display = 'flex';
-  $('rpLock').style.display = 'block';
-  $('rpList').style.display = 'none';
-  $('rpPreview').style.display = 'none';
-  $('rpPw').value = '';
-  $('rpErr').textContent = '';
-};
-$('rpBack1').onclick = goHome;
-$('rpBack2').onclick = goHome;
-$('rpBack3').onclick = () => {
-  $('rpPreview').style.display = 'none';
-  $('rpList').style.display = 'block';
-};
-$('rpUnlock').onclick = () => {
-  const pw = $('rpPw').value;
-  stateRef.child('settings/adminPw').once('value').then(snap => {
-    if (pw === (snap.val() || 'ktmc881485')) {
-      $('rpLock').style.display = 'none';
-      $('rpList').style.display = 'block';
-      renderRpList();
-    } else {
-      $('rpErr').textContent = 'Wrong password 密碼錯誤';
-    }
-  });
-};
-$('rpPw').addEventListener('keydown', e => { if (e.key === 'Enter') $('rpUnlock').onclick(); });
-
-function renderRpList(){
-  const ts = ticketsArr().sort((a,b) => b.no - a.no).slice(0, 60);
-  $('rpItems').innerHTML = ts.map(t =>
-    `<button class="rp-chip" data-k="${t.key}">${t.label}</button>`
-  ).join('') || '<p class="muted">No tickets 暫無籌號</p>';
-}
-
-$('rpItems').onclick = e => {
-  const k = e.target.dataset.k; if (!k) return;
-  const t = ticketsArr().find(x => x.key === k); if (!t) return;
-  rpTicket = t;
-  $('rpPrevBody').innerHTML = `
-    <div class="rp-ticket">
-      <div class="badge">Reprinted 重新列印</div>
-      <div class="center b">觀塘瑪利諾書院</div>
-      <div class="center" style="font-size:11px">KWUN TONG MARYKNOLL COLLEGE</div>
-      <div class="center" style="margin-top:6px">號碼票 QUEUE TICKET</div>
-      <div class="num">${t.label}</div>
-      <div>發行時間 Issuing Time: ${t.time}</div>
-      <div>重印時間 Reprint Time: ${nowLabel()}</div>
-      <div>時段 Session: ${STATE.session.prefix}</div>
-    </div>`;
-  $('rpList').style.display = 'none';
-  $('rpPreview').style.display = 'block';
-};
-
-$('rpPrint').onclick = () => {
-  if (!rpTicket) return;
-  if (!confirm(`確定要重印 ${rpTicket.label} 嗎？\nReprint ${rpTicket.label}?`)) return;
-  remotePrint(rpTicket, true);   // 遙控重印 Remote reprint
-  $('rpPreview').style.display = 'none';
-  $('rpList').style.display = 'block';
-};
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="js/config.js"></script><script src="js/i18n.js"></script><script src="js/auth.js"></script><script src="js/common.js"></script>
+<script src="js/kiosk.js"></script>
 </body></html>
