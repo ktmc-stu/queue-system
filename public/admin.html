@@ -16,6 +16,7 @@
     <button data-page="announce"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></svg><span class="lbl" data-i18n="a.announce"></span></button>
     <button data-page="counters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg><span class="lbl" data-i18n="a.counters"></span></button>
     <button data-page="texts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg><span class="lbl" data-i18n="a.texts"></span></button>
+    <button data-page="ticket"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/><path d="M13 5v2M13 11v2M13 17v2"/></svg><span class="lbl" data-i18n="a.ticket"></span></button>
     <button data-page="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span class="lbl" data-i18n="a.print"></span></button>
     <button data-page="tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/><path d="M13 5v2M13 11v2M13 17v2"/></svg><span class="lbl" data-i18n="a.tickets"></span></button>
     <div class="grp" data-i18n="g.manage"></div>
@@ -112,7 +113,6 @@
       <div class="card">
         <div class="g"><div><label data-i18n="tx.title"></label><input id="setTitle"></div><div><label data-i18n="tx.subtitle"></label><input id="setSubtitle"></div></div>
         <div style="margin-top:12px"><label data-i18n="tx.note"></label><input id="setNote"></div>
-        <div style="margin-top:12px"><label data-i18n="tx.ticketNote"></label><textarea id="setTicketNote" rows="6"></textarea></div>
         <hr>
         <h3 data-i18n="tx.paper"></h3>
         <div class="row">
@@ -121,6 +121,66 @@
         </div>
         <p class="muted" style="margin-top:8px" data-i18n="tx.paperNote"></p>
         <div class="row" style="margin-top:14px"><button class="btn" id="btnSave" data-i18n="tx.saveAll"></button></div>
+      </div>
+    </section>
+
+    <section class="page" id="pg-ticket">
+      <div class="phead"><h2 data-i18n="a.ticket"></h2><p data-i18n="d.ticket"></p></div>
+      <div class="tkd">
+        <div>
+          <div class="card">
+            <h3 data-i18n="td.title"></h3>
+            <div class="g">
+              <div><label data-i18n="td.titleZh"></label><input id="tkTitleZh" maxlength="20"></div>
+              <div><label data-i18n="td.titleEn"></label><input id="tkTitleEn" maxlength="40"></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="td.header"></h3>
+            <div class="g">
+              <div><label data-i18n="td.schoolZh"></label><input id="tkSchoolZh" maxlength="30"></div>
+              <div><label data-i18n="td.schoolEn"></label><input id="tkSchoolEn" maxlength="60"></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="td.sections"></h3>
+            <p class="muted" data-i18n="td.sectionsHint"></p>
+            <div class="row" style="margin-bottom:10px">
+              <button class="btn gray mini" id="tkAllOn" data-i18n="td.allOn"></button>
+              <button class="btn gray mini" id="tkAllOff" data-i18n="td.allOff"></button>
+            </div>
+            <div class="tgrid">
+              <label class="trow"><span class="tl"><b data-i18n="td.sLogo"></b></span><span class="tswitch"><input type="checkbox" id="tkShowLogo"><i></i></span></label>
+              <label class="trow"><span class="tl"><b data-i18n="td.sSchoolZh"></b></span><span class="tswitch"><input type="checkbox" id="tkShowSchoolZh"><i></i></span></label>
+              <label class="trow"><span class="tl"><b data-i18n="td.sSchoolEn"></b></span><span class="tswitch"><input type="checkbox" id="tkShowSchoolEn"><i></i></span></label>
+              <label class="trow"><span class="tl"><b data-i18n="td.sTitleZh"></b></span><span class="tswitch"><input type="checkbox" id="tkShowTitleZh"><i></i></span></label>
+              <label class="trow"><span class="tl"><b data-i18n="td.sTitleEn"></b></span><span class="tswitch"><input type="checkbox" id="tkShowTitleEn"><i></i></span></label>
+              <label class="trow"><span class="tl"><b data-i18n="td.sTime"></b></span><span class="tswitch"><input type="checkbox" id="tkShowTime"><i></i></span></label>
+              <label class="trow"><span class="tl"><b data-i18n="td.sReprintTime"></b></span><span class="tswitch"><input type="checkbox" id="tkShowReprintTime"><i></i></span></label>
+              <label class="trow"><span class="tl"><b data-i18n="td.sSession"></b></span><span class="tswitch"><input type="checkbox" id="tkShowSession"><i></i></span></label>
+              <label class="trow"><span class="tl"><b data-i18n="td.sNote"></b></span><span class="tswitch"><input type="checkbox" id="tkShowNote"><i></i></span></label>
+              <label class="trow"><span class="tl"><b data-i18n="td.sBadge"></b></span><span class="tswitch"><input type="checkbox" id="tkShowBadge"><i></i></span></label>
+            </div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="td.note"></h3>
+            <textarea id="tkNote" rows="6"></textarea>
+          </div>
+          <div class="row">
+            <button class="btn" id="tkSave" data-i18n="td.save"></button>
+            <button class="btn gray" id="tkReset" data-i18n="td.reset"></button>
+          </div>
+        </div>
+        <div class="tkd-stage">
+          <div class="card">
+            <div class="row" style="margin-bottom:12px">
+              <h3 style="border:0;padding:0;margin:0" data-i18n="td.preview"></h3>
+              <span class="spacer"></span>
+              <div class="seg" id="tkMode"><button data-m="normal" class="on" data-i18n="td.normal"></button><button data-m="reprint" data-i18n="td.reprint"></button></div>
+            </div>
+            <div class="tkd-paperwrap"><div id="tkPreview"></div></div>
+          </div>
+        </div>
       </div>
     </section>
 
