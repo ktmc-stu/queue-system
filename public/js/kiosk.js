@@ -1,4 +1,4 @@
-/* js/kiosk.js — public ticketing; reprint & paper are admin-role gated (no shared password) */
+/* js/kiosk.js — public ticketing; reprint & paper are admin-role gated */
 const $=id=>document.getElementById(id);
 let busy=false,backTimer=null,takenNo=null,shownAt=0,rpTicket=null;
 
@@ -74,14 +74,7 @@ $('rpItems').onclick=e=>{
   const k=e.target.dataset.k;if(!k)return;
   const x=ticketsArr().find(y=>y.key===k);if(!x)return;
   rpTicket=x;
-  $('rpPrevBody').innerHTML=
-    '<div class="rp-ticket"><div class="badge">Reprinted 重新列印</div>'
-    +'<div class="center b">觀塘瑪利諾書院</div><div class="center" style="font-size:11px">KWUN TONG MARYKNOLL COLLEGE</div>'
-    +'<div class="center" style="margin-top:6px">號碼票 QUEUE TICKET</div>'
-    +'<div class="num">'+esc(x.label)+'</div>'
-    +'<div>發行時間 Issuing Time: '+esc(x.time)+'</div>'
-    +'<div>重印時間 Reprint Time: '+nowLabel()+'</div>'
-    +'<div>時段 Session: '+esc(STATE.session.prefix)+'</div></div>';
+  $('rpPrevBody').innerHTML='<div class="ticket-paper">'+ticketHTML({label:x.label,time:x.time,session:STATE.session.prefix,reprint:true})+'</div>';
   $('rpList').style.display='none';$('rpPreview').style.display='block';
 };
 $('rpPrint').onclick=async()=>{
