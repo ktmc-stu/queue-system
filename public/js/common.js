@@ -3,11 +3,18 @@ try{ if(!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG); }
 const db = firebase.database();
 const stateRef = db.ref('queue');
 
+const TICKET_DEFAULTS = {
+  titleZh: '號碼票', titleEn: 'QUEUE TICKET',
+  schoolZh: '觀塘瑪利諾書院', schoolEn: 'KWUN TONG MARYKNOLL COLLEGE',
+  show: { logo:true, schoolZh:true, schoolEn:true, titleZh:true, titleEn:true, time:true, reprintTime:true, session:true, note:true, reprintBadge:true }
+};
+
 const DEFAULTS = {
   settings: {
     title: 'Queue Up', subtitle: '請排隊取號',
     note: 'Please keep your ticket and watch for the display announcement. 請保留籌號並留意顯示屏廣播。',
     ticketNote: '請妥善保管此籌號，並留意顯示屏及廣播。\nPlease keep this ticket and wait for your turn.\n若連續叫號3次後仍未到場，籌號將作廢。\nYour ticket will be canceled after three missed calls.\n如不慎過號，請重新取號輪候。\nPlease get a new ticket if you missed your turn.',
+    ticket: TICKET_DEFAULTS,
     counters: [ { id: 1, name: 'Counter 1', nameZh: '一號櫃位' }, { id: 2, name: 'Counter 2', nameZh: '二號櫃位' } ],
     tts: { languages: ['en','yue','zh'], rate: 1, volume: 1, repeat: 1 },
     avgMinutes: 3, paper: '80'
@@ -28,6 +35,35 @@ function waiting(){ return ticketsArr().filter(x=>x.status==='waiting').sort((a,
 function currentOf(id){ return ticketsArr().filter(x=>x.status==='called' && String(x.counter)===String(id)).sort((a,b)=>(b.calledAt||0)-(a.calledAt||0))[0]; }
 function counterById(id){ return STATE ? ((STATE.settings.counters||[]).find(c=>String(c.id)===String(id))||{id:id,name:'Counter '+id,nameZh:'櫃位 '+id}) : {id:id,name:'Counter '+id,nameZh:'櫃位 '+id}; }
 async function nextSeq(path){ let v; await stateRef.child(path).transaction(c => { v=(c||0)+1; return v; }); return v; }
+
+/* ===== Ticket design (admin-configurable title + section visibility) ===== */
+function ticketCfg(){
+  const x=(STATE&&STATE.settings&&STATE.settings.ticket)||{};
+  return Object.assign({},TICKET_DEFAULTS,x,{show:Object.assign({},TICKET_DEFAULTS.show,x.show||{})});
+}
+function ticketHTML(j,cfg,noteText){
+  const c=cfg||ticketCfg(),s=c.show;
+  const note=noteText!=null?noteText:((STATE&&STATE.settings&&STATE.settings.ticketNote)||DEFAULTS.settings.ticketNote);
+  const has=v=>String(v==null?'':v).trim().length>0;
+  let h='';
+  if(j.reprint&&s.reprintBadge)h+='<div class="t-reprint">Reprinted 重新列印</div>';
+  if(s.logo||(s.schoolZh&&has(c.schoolZh))||(s.schoolEn&&has(c.schoolEn))){
+    h+='<div class="t-head">'+(s.logo?'<img src="img/logo.png" alt="">':'')+'<div>'
+      +(s.schoolZh&&has(c.schoolZh)?'<div class="t-school-zh">'+esc(c.schoolZh)+'</div>':'')
+      +(s.schoolEn&&has(c.schoolEn)?'<div class="t-school-en">'+esc(c.schoolEn)+'</div>':'')
+      +'</div></div>';
+  }
+  h+='<div class="t-center">'
+    +(s.titleZh&&has(c.titleZh)?'<div class="t-title">'+esc(c.titleZh)+'</div>':'')
+    +(s.titleEn&&has(c.titleEn)?'<div class="t-title-en">'+esc(c.titleEn)+'</div>':'')
+    +'<div class="t-num">'+esc(j.label)+'</div>'
+    +(s.time?'<div class="t-row">發行時間 Issuing Time: '+esc(j.time||'')+'</div>':'')
+    +(j.reprint&&s.reprintTime?'<div class="t-row">重印時間 Reprint Time: '+nowLabel()+'</div>':'')
+    +(s.session?'<div class="t-row">時段 Session: '+esc(j.session||'')+'</div>':'')
+    +'</div>';
+  if(s.note)h+='<div class="t-note">'+esc(note).replace(/\n/g,'<br>')+'</div>';
+  return h;
+}
 
 async function takeTicket(){
   if(!STATE) return null;
