@@ -45,21 +45,6 @@ async function processJobs(){
   }
   printing=false;
 }
-const DEFAULT_TICKET_NOTE='請妥善保管此籌號，並留意顯示屏及廣播。\nPlease keep this ticket and wait for your turn.\n若連續叫號3次後仍未到場，籌號將作廢。\nYour ticket will be canceled after three missed calls.\n如不慎過號，請重新取號輪候。\nPlease get a new ticket if you missed your turn.';
-function noteHTML(){
-  const txt=(STATE&&STATE.settings&&STATE.settings.ticketNote)?STATE.settings.ticketNote:DEFAULT_TICKET_NOTE;
-  return esc(txt).replace(/\n/g,'<br>');
-}
-function ticketHTML(j){
-  return (j.reprint?'<div class="t-reprint">Reprinted 重新列印</div>':'')
-  +'<div class="t-head"><img src="img/logo.png" alt="logo"><div><div class="t-school-zh">觀塘瑪利諾書院</div><div class="t-school-en">KWUN TONG MARYKNOLL COLLEGE</div></div></div>'
-  +'<div class="t-center"><div class="t-title">號碼票</div><div class="t-title-en">QUEUE TICKET</div>'
-  +'<div class="t-num">'+esc(j.label)+'</div>'
-  +'<div class="t-row">發行時間 Issuing Time: '+esc(j.time)+'</div>'
-  +(j.reprint?'<div class="t-row">重印時間 Reprint Time: '+nowLabel()+'</div>':'')
-  +'<div class="t-row">時段 Session: '+esc(j.session)+'</div></div>'
-  +'<div class="t-note">'+noteHTML()+'</div>';
-}
 function freeHTML(j){
   let h='<div class="f-wrap">';
   if(j.image)h+='<img class="f-img" src="'+j.image+'">';
