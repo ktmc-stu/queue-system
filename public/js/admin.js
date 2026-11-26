@@ -1,6 +1,6 @@
-/* js/admin.js — Head Admin / Admin console (name-label pattern applied to the queue) */
+/* js/admin.js — Head Admin / Admin console (with Ticket Design page) */
 (function(){
-const PAGES=['overview','session','announce','counters','texts','print','tickets','users','audit','settings'];
+const PAGES=['overview','session','announce','counters','texts','ticket','print','tickets','users','audit','settings'];
 const S={user:null,profile:null,role:'staff',canManage:false,isHead:false,started:false,
   page:'overview',uFilter:'pending',tFilter:'waiting',aView:'live',
   users:{},admins:{},audit:[],sessions:{},presence:{},
@@ -74,10 +74,11 @@ function renderForms(){
   $('langZh').checked=tt.languages.includes('zh');
   $('ttsRepeat').value=tt.repeat||1;
   $('setTitle').value=s.title||'';$('setSubtitle').value=s.subtitle||'';
-  $('setNote').value=s.note||'';$('setTicketNote').value=s.ticketNote||'';
+  $('setNote').value=s.note||'';
   $('avgMinutes').value=s.avgMinutes||3;
   $('paper58').checked=s.paper==='58';$('paper80').checked=s.paper!=='58';
   $('prefixInput').placeholder=(STATE.session&&STATE.session.prefix)||'A';
+  loadTicketForm(ticketCfg(), s.ticketNote||DEFAULTS.settings.ticketNote);
 }
 function renderCounters(){
   const cs=counters();
@@ -167,6 +168,7 @@ function renderBanner(){
 function renderEverything(){
   safe(renderForms,'forms');safe(renderOverview,'overview');safe(renderCounters,'counters');
   safe(renderTickets,'tickets');safe(renderUsers,'users');safe(renderAudit,'audit');
+  safe(renderTicketPreview,'ticketPreview');
   safe(renderDiag,'diag');safe(renderBanner,'banner');
 }
 
@@ -249,6 +251,48 @@ function resizeImage(file,maxW,cb){
   reader.readAsDataURL(file);
 }
 
+/* ---------- ticket designer ---------- */
+let tkMode='normal';
+const TK_SAMPLE_TIME=nowLabel();
+function loadTicketForm(c,note){
+  $('tkTitleZh').value=c.titleZh||'';$('tkTitleEn').value=c.titleEn||'';
+  $('tkSchoolZh').value=c.schoolZh||'';$('tkSchoolEn').value=c.schoolEn||'';
+  const m={logo:'tkShowLogo',schoolZh:'tkShowSchoolZh',schoolEn:'tkShowSchoolEn',titleZh:'tkShowTitleZh',titleEn:'tkShowTitleEn',time:'tkShowTime',reprintTime:'tkShowReprintTime',session:'tkShowSession',note:'tkShowNote',reprintBadge:'tkShowBadge'};
+  Object.keys(m).forEach(k=>{$(m[k]).checked=!!(c.show&&c.show[k]);});
+  $('tkNote').value=note||'';
+}
+function readTicketForm(){
+  const g=id=>$(id).checked;
+  return {titleZh:$('tkTitleZh').value.trim(),titleEn:$('tkTitleEn').value.trim(),
+    schoolZh:$('tkSchoolZh').value.trim(),schoolEn:$('tkSchoolEn').value.trim(),
+    show:{logo:g('tkShowLogo'),schoolZh:g('tkShowSchoolZh'),schoolEn:g('tkShowSchoolEn'),titleZh:g('tkShowTitleZh'),titleEn:g('tkShowTitleEn'),time:g('tkShowTime'),reprintTime:g('tkShowReprintTime'),session:g('tkShowSession'),note:g('tkShowNote'),reprintBadge:g('tkShowBadge')}};
+}
+function renderTicketPreview(){
+  const box=$('tkPreview');if(!box)return;
+  const cfg=S.formLoaded?readTicketForm():ticketCfg();
+  const note=S.formLoaded?$('tkNote').value:undefined;
+  const j={label:'A001',time:TK_SAMPLE_TIME,session:(STATE&&STATE.session&&STATE.session.prefix)||'A',reprint:tkMode==='reprint'};
+  box.innerHTML='<div class="ticket-paper">'+ticketHTML(j,cfg,note)+'</div>';
+  document.querySelectorAll('#pg-ticket .trow').forEach(r=>{const i=r.querySelector('input');if(i)r.classList.toggle('off',!i.checked);});
+}
+function wireTicket(){
+  const pg=$('pg-ticket');if(!pg)return;
+  pg.addEventListener('input',()=>safe(renderTicketPreview,'ticketPreview'));
+  pg.addEventListener('change',()=>safe(renderTicketPreview,'ticketPreview'));
+  document.querySelectorAll('#tkMode button').forEach(b=>b.onclick=()=>{tkMode=b.dataset.m;document.querySelectorAll('#tkMode button').forEach(x=>x.classList.toggle('on',x===b));safe(renderTicketPreview,'ticketPreview');});
+  $('tkAllOn').onclick=()=>{pg.querySelectorAll('.tswitch input').forEach(i=>i.checked=true);safe(renderTicketPreview,'ticketPreview');};
+  $('tkAllOff').onclick=()=>{pg.querySelectorAll('.tswitch input').forEach(i=>i.checked=false);safe(renderTicketPreview,'ticketPreview');};
+  $('tkSave').onclick=async()=>{
+    if(!guard())return;
+    try{await saveSettings({ticket:readTicketForm(),ticketNote:$('tkNote').value});toast(t('td.saved'));}catch(e){werr(e);}
+  };
+  $('tkReset').onclick=()=>{
+    if(!confirm(t('td.resetQ')))return;
+    loadTicketForm(TICKET_DEFAULTS,DEFAULTS.settings.ticketNote);
+    safe(renderTicketPreview,'ticketPreview');
+  };
+}
+
 /* ---------- wiring ---------- */
 function wire(){
   document.querySelectorAll('#rail button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
@@ -326,7 +370,7 @@ function wire(){
     if(!confirm(t('tx.saveQ')))return;
     try{
       await saveSettings({title:$('setTitle').value,subtitle:$('setSubtitle').value,note:$('setNote').value,
-        ticketNote:$('setTicketNote').value,paper:$('paper58').checked?'58':'80'});
+        paper:$('paper58').checked?'58':'80'});
       toast(t('c.saved'));
     }catch(e){werr(e);}
   };
@@ -493,6 +537,7 @@ document.addEventListener('auth-profile',e=>{
   else{$('console').style.display='';$('denied').style.display='none';if(!S.started)start(S.user,p);else attachHead();}
 });
 wire();
+wireTicket();
 applyRoleGates();
 showPage(location.hash.slice(1)||'overview');
 })();
